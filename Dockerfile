@@ -5,6 +5,8 @@ RUN python setup.py bdist_wheel -d /app/dist/
 FROM python:3.7
 RUN apt-get update
 RUN apt-get install -y libldap2-dev libsasl2-dev libldap2-dev libssl-dev
+RUN apt-get install -y nginx
+RUN apt-get install -y supervisor
 
 WORKDIR /app
 
@@ -18,4 +20,14 @@ COPY --from=builder /app/lemur/static/dist /opt/lemur/static
 COPY lemur.conf.py /opt/lemur/
 ENV LEMUR_CONF /opt/lemur/lemur.conf.py
 
-ENTRYPOINT [ "lemur" ]
+# setup nginx
+COPY nginx.conf /etc/nginx/sites-available/default
+
+# setup supervisor
+RUN mkdir -p /var/log/supervisor
+COPY supervisord.conf .
+
+EXPOSE 80
+
+# ENTRYPOINT [ "lemur" ]
+CMD ["/usr/bin/supervisord", "-c", "supervisord.conf"]
