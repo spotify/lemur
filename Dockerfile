@@ -1,5 +1,16 @@
 FROM gcr.io/xpn-cert-management/lemur:latest AS builder
-RUN python setup.py bdist_wheel -d /app/dist/
+
+# build api
+# RUN python setup.py bdist_wheel -d /app/dist/
+
+# build frontend
+# need to delete some left-overs from using submodules
+WORKDIR /app
+RUN rm /app/.git
+
+# doesn't look like bower likes being root so we need --unsafe-perm here
+RUN npm install --unsafe-perm
+RUN python setup.py sdist bdist_wheel
 
 # TODO(jonaspalm): Switch to Spotify base image when they support Python 3.7
 FROM python:3.7
