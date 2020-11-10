@@ -1,0 +1,42 @@
+---
+# The Service resource groups pods that match a label selector, for things like
+# load balancing and service discovery. Our kubernetes-nameless integration
+# (https://ghe.spotify.net/kubernetes/shameless) listens for Service resources
+# that match given labels.
+# For more details, see
+# https://ghe.spotify.net/kubernetes/shameless#how-to-have-shameless-register-your-pods-in-nameless.
+#
+# https://v1-8.docs.kubernetes.io/docs/api-reference/v1.8/#service-v1-core
+apiVersion: v1
+kind: Service
+metadata:
+  name: lemur
+  namespace: cert-management 
+  labels:
+    app: lemur
+    nameless.spotify.com/enabled: "true"
+    # this label enables SRV registration:
+    nameless.spotify.com/expose-srv: "true"
+    # this label enables A registration:
+    nameless.spotify.com/expose-a: "true"
+spec:
+  # Any pods that match these label(s) are considered a part of this Service.
+  selector:
+    app:lemur 
+  type: ClusterIP
+  # Since we do not expect anything to try to access these pods through this
+  # Service - i.e. through a foobar.$namespace.svc.cluster.local DNS name, or
+  # by resolving the Cluster IP (which is only reachable within a cluster), we
+  # specify a clusterIP of "None" to avoid Kubernetes from assigning a
+  # clusterIP to this Service, to avoid any possible confusion.
+  clusterIP: None
+  ports:
+  # shameless will create SRV records for each port entry in this list. The
+  # name of the port is used in the SRV record, i.e.
+  # `_spotify-foobar._proto.services.gew1.spotify.net`.
+  #- name: http
+  #  port: 80
+  #  protocol: TCP
+  - name: http
+    port: 80 
+    protocol: TCP
