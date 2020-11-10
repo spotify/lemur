@@ -22,7 +22,7 @@ metadata:
 spec:
   # Any pods that match these label(s) are considered a part of this Service.
   selector:
-    app:lemur 
+    app: lemur 
   type: ClusterIP
   # Since we do not expect anything to try to access these pods through this
   # Service - i.e. through a foobar.$namespace.svc.cluster.local DNS name, or
