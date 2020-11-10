@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lemur
+  namespace: cert-management 
+spec:
+  selector:
+    matchLabels:
+      app: lemur
+  template:
+    metadata:
+      labels:
+        app: lemur
+        role: spotifylemur
+    spec:
+      containers:
+      - name: lemur 
+        image: $DEPLOYMENT_IMAGE
+        env:
+        - name: LEMUR_ENCRYPTION_KEYS
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.LEMUR_ENCRYPTION_KEYS'
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /api/1/healthcheck
+            port: http
+            scheme: HTTP
+        resources:
+          requests:
+            cpu: 1
+            memory: 2Gi
+          limits:
+            cpu: 2
+            memory: 2Gi

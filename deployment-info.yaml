@@ -1,0 +1,8 @@
+version: 1
+components:
+- componentId: spotify-lemur 
+  tugboat:
+    backends:
+      - backend: kubernetes
+        manifestsDir: kubernetes
+        regions: [europe-west1]
