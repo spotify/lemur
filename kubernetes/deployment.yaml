@@ -27,6 +27,16 @@ spec:
             secretKeyRef:
               name: 'lemur-secrets'
               key: 'lemur.SQLALCHEMY_DATABASE_URI'
+        - name: LEMUR_TOKEN_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'lemur.LEMUR_TOKEN_SECRET'
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'lemur.SECRET_KEY'
         ports:
         - name: http
           containerPort: 80
