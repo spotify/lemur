@@ -53,11 +53,11 @@ LOG_LEVEL = str(os.environ.get('LOG_LEVEL','DEBUG'))
 SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','postgresql://lemur:lemur@localhost:5432/lemur')
 
 LDAP_DEBUG = os.environ.get('LDAP_DEBUG') == "True"
-LDAP_AUTH = os.environ.get('LDAP_AUTH') == "True"
-LDAP_IS_ACTIVE_DIRECTORY = os.environ.get('LDAP_IS_ACTIVE_DIRECTORY') == "True"
-LDAP_BIND_URI = str(os.environ.get('LDAP_BIND_URI',''))
-LDAP_BASE_DN = str(os.environ.get('LDAP_BASE_DN',''))
-LDAP_EMAIL_DOMAIN = str(os.environ.get('LDAP_EMAIL_DOMAIN',''))
-LDAP_USE_TLS = str(os.environ.get('LDAP_USE_TLS',''))
+LDAP_AUTH = os.environ.get('LDAP_AUTH', True)
+LDAP_IS_ACTIVE_DIRECTORY = os.environ.get('LDAP_IS_ACTIVE_DIRECTORY', True)
+LDAP_BIND_URI = str(os.environ.get('LDAP_BIND_URI', 'ds.spotify.net'))
+LDAP_BASE_DN = str(os.environ.get('LDAP_BASE_DN', 'ou=people,ou=spotify,dc=spotify,dc=net'))
+LDAP_EMAIL_DOMAIN = str(os.environ.get('LDAP_EMAIL_DOMAIN','spotify.com'))
+LDAP_USE_TLS = os.environ.get('LDAP_USE_TLS', True)
 LDAP_REQUIRED_GROUP = str(os.environ.get('LDAP_REQUIRED_GROUP',''))
 LDAP_GROUPS_TO_ROLES = literal_eval(os.environ.get('LDAP_GROUPS_TO_ROLES') or "{}")
