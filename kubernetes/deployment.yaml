@@ -37,6 +37,11 @@ spec:
             secretKeyRef:
               name: 'lemur-secrets'
               key: 'lemur.SECRET_KEY'
+        - name: GOOGLE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'lemur.GOOGLE_SECRET'
         ports:
         - name: http
           containerPort: 80
