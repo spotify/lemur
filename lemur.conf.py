@@ -40,9 +40,12 @@ LEMUR_DEFAULT_ORGANIZATIONAL_UNIT = str(os.environ.get('LEMUR_DEFAULT_ORGANIZATI
 LEMUR_DEFAULT_ISSUER_PLUGIN = str(os.environ.get('LEMUR_DEFAULT_ISSUER_PLUGIN',''))
 LEMUR_DEFAULT_AUTHORITY = str(os.environ.get('LEMUR_DEFAULT_AUTHORITY',''))
 
-ACTIVE_PROVIDERS = []
-
 METRIC_PROVIDERS = []
+
+ACTIVE_PROVIDERS = ['google']
+
+GOOGLE_CLIENT_ID = str(os.environ.get('GOOGLE_CLIENT_ID','421791425557-lfk56lqi3rnhi4n2fr2rakmbv4lbc93l.apps.googleusercontent.com'))
+GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
 LOG_LEVEL = str(os.environ.get('LOG_LEVEL','DEBUG'))
 # LOG_FILE = str(os.environ.get('LOG_FILE','/home/lemur/.lemur/lemur.log'))
