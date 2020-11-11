@@ -26,22 +26,22 @@ spec:
           valueFrom:
             secretKeyRef:
               name: 'lemur-secrets'
-              key: 'lemur.SQLALCHEMY_DATABASE_URI'
+              key: 'spotifylemur.SQLALCHEMY_DATABASE_URI'
         - name: LEMUR_TOKEN_SECRET
           valueFrom:
             secretKeyRef:
               name: 'lemur-secrets'
-              key: 'lemur.LEMUR_TOKEN_SECRET'
+              key: 'spotifylemur.LEMUR_TOKEN_SECRET'
         - name: SECRET_KEY
           valueFrom:
             secretKeyRef:
               name: 'lemur-secrets'
-              key: 'lemur.SECRET_KEY'
+              key: 'spotifylemur.SECRET_KEY'
         - name: GOOGLE_SECRET
           valueFrom:
             secretKeyRef:
               name: 'lemur-secrets'
-              key: 'lemur.GOOGLE_SECRET'
+              key: 'spotifylemur.GOOGLE_SECRET'
         ports:
         - name: http
           containerPort: 80
