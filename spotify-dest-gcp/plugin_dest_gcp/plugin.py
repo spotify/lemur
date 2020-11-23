@@ -8,7 +8,18 @@ class GcpDestination(DestinationPlugin):
     author = 'Your Name'
     author_url = 'https://github.com/yourname/lemur_pluginname'
 
-    options = []
+    options = [
+        {
+            'name': 'gcp-project',
+            'type': 'str',
+            'required': True,
+        },
+        {
+            'name': 'target-proxy-name',
+            'type': 'str',
+            'required': True,
+        },
+    ]
     additional_options = []
 
     def __init__(self, *args, **kwargs):
@@ -16,4 +27,4 @@ class GcpDestination(DestinationPlugin):
 
 
     def upload(self, name, body, private_key, cert_chain, options, **kwargs):
-        pass
+        raise NotImplementedError
