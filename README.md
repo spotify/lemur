@@ -5,8 +5,7 @@ Lemur deployment on Spotify infra
 `Requirements: Docker and docker-compose`
 
 Everything below uses Docker to setup the environment so Python and
-the required dependencies for Lemur are not needed to setup the development
-environment.
+the required dependencies for Lemur shouldn't be needed.
 
 ### Start and setup PostgreSQL:
 ```bash
