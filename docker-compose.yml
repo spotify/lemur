@@ -1,0 +1,15 @@
+version: '3.1'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./lemur_init.sql:/docker-entrypoint-initdb.d/lemur_init.sql
+    environment:
+      - POSTGRES_PASSWORD
+volumes:
+  pgdata:
