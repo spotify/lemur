@@ -14,9 +14,11 @@ environment.
 POSTGRES_PASSWORD=<PASSWORD> docker-compose up
 ```
 
+The `POSTGRES_PASSWORD` environment is only needed during the first run of
+`docker-compose`.
+
 ### Create Lemur environment and initialize database
 ```bash
-# replace <PASSWORD> with the password you want to set on the postgres user
 ./dev-setup.sh
 ```
 
