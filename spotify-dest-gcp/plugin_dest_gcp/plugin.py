@@ -1,5 +1,7 @@
 from lemur.plugins.bases import DestinationPlugin
 
+from googleapiclient import discovery
+
 class GcpDestination(DestinationPlugin):
     title = 'Gcp Destination'
     slug = 'gcp_destination'
