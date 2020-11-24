@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-set -e
+set -ex
 
 LEMUR_ENV=".lemur-env"
 
@@ -17,7 +17,7 @@ echo SQLALCHEMY_DATABASE_URI="postgresql://lemur:lemur@host.docker.internal:5432
 
 echo "[dev-setup] initializing database..."
 docker run -it --rm \
-    -v $(PWD)/lemur.conf.py:/app/lemur.conf.py \
+    -v $(pwd)/lemur.conf.py:/app/lemur.conf.py \
     --env-file $LEMUR_ENV \
     -e LEMUR_CONF="/app/lemur.conf.py" \
     -w /app/lemur \
@@ -25,3 +25,4 @@ docker run -it --rm \
     lemur init
 
 echo "[dev-setup] done!"
+
