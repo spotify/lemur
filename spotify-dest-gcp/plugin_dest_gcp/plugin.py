@@ -1,6 +1,6 @@
 from lemur.plugins.bases import DestinationPlugin
 
-from googleapiclient import discovery
+from .gcp import Gcp
 
 class GcpDestination(DestinationPlugin):
     title = 'Gcp Destination'
@@ -29,4 +29,8 @@ class GcpDestination(DestinationPlugin):
 
 
     def upload(self, name, body, private_key, cert_chain, options, **kwargs):
-        raise NotImplementedError
+        gcp = Gcp(
+            self.get_option("gcp-project", options),
+            self.get_option("target-proxy-name", options))
+
+        gcp.add_certificate(name, body, private_key, cert_chain)

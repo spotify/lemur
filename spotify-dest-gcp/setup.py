@@ -8,7 +8,9 @@ setup(
         ],
     },
     install_requires=[
-        "google-api-python-client >= 1"
+        "google-api-python-client >= 1",
+        "google-oauth >= 1",
+        "backoff >= 1.10"
     ],
     test_requires=[
         "pytest"
