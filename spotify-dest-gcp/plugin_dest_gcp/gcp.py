@@ -2,6 +2,7 @@ from googleapiclient import discovery
 import googleapiclient.errors
 import google.auth
 import backoff
+import hashlib
 
 
 class Gcp:
@@ -18,6 +19,13 @@ class Gcp:
         # replace . with - in the certificate name
         # TODO: Match against  the regex provided by Google: '[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?|[1-9][0-9]{0,19}'
         name = name.replace(".", "-").lower()
+
+        # if longer then 62 characters, remove the last 8 characters and
+        # append "-<HASH>" where HASH is the 7 first characters of the Sha256
+        # hash of the name
+        max_length = 62
+        if len(name) > max_length:
+            name = f"{name[:max_length-8]}-{hashlib.sha256(name.encode('UTF-8')).hexdigest()[:7]}"
 
         # make sure certificate doesn't exist in the GCP project
         try:
