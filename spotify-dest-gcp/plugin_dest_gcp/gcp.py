@@ -42,7 +42,9 @@ class Gcp:
                 raise e
             print("certificate does not exist, uploading")
 
-        cert_bundle = cert + (cert_chain if cert_chain else "")
+        cert_bundle = cert
+        if cert_chain:
+            cert_bundle += f"\n{cert_chain}"
 
         ssl_certificate_body = {
             "name": name,
