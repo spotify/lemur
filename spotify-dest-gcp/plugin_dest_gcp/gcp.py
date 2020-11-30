@@ -3,14 +3,15 @@ import googleapiclient.errors
 import google.auth
 import backoff
 import hashlib
-
+import logging
 
 class Gcp:
-    def __init__(self, gcp_project, target_lb, http=None):
+    def __init__(self, gcp_project, target_lb, logger=None, http=None):
         self.gcp_project = gcp_project
         self.target_lb = target_lb
         credentials, _ = google.auth.default()
         self.client = discovery.build('compute', 'v1', credentials=credentials)
+        self.logger = logger if logger else logging.getLogger(__name__)
 
     def create_gcp_certificate(self, name, cert, private_key, cert_chain):
         # returns a resource identifier which we can use in the LB
@@ -35,12 +36,12 @@ class Gcp:
             response = request.execute()
 
             # TODO: Make sure we're actually looking at the same certificate
-            print("certificate existed, returning")
+            self.logger.info("Certificate existed, returning")
             return response["selfLink"]
         except googleapiclient.errors.HttpError as e:
             if e.resp.status != 404:
                 raise e
-            print("certificate does not exist, uploading")
+            self.logger.info("Certificate does not exist, uploading")
 
         cert_bundle = cert
         if cert_chain:
@@ -77,7 +78,7 @@ class Gcp:
         
         assert len(request_body["sslCertificates"]) <= 16
 
-        print("updating load balancer with new cert")
+        self.logger.debug(f"Updating GFE {self.target_lb}")
         request = self.client.targetHttpsProxies().setSslCertificates(
             project=self.gcp_project,
             targetHttpsProxy=self.target_lb,
@@ -102,9 +103,11 @@ class Gcp:
 
             # sanity check before setting ssl certificates
             assert len(new_certificate_list) >= len(ssl_certificates)
+
+            self.logger.info(f"Attaching cert {name} to {self.target_lb}")
             self.update_load_balancer_ssl_certificates(new_certificate_list)
         else:
-            print("lb already has a certificate attached with the same name")
+            self.logger.info(f"Target GFE {self.target_lb} already has cert {cert_name} attached, skipping.")
 
 
 if __name__ == "__main__":

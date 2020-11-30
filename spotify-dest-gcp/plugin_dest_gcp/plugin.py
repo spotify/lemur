@@ -1,4 +1,5 @@
 from lemur.plugins.bases import DestinationPlugin
+from flask import current_app
 
 from .gcp import Gcp
 
@@ -31,6 +32,7 @@ class GcpDestination(DestinationPlugin):
     def upload(self, name, body, private_key, cert_chain, options, **kwargs):
         gcp = Gcp(
             self.get_option("gcp-project", options),
-            self.get_option("target-proxy-name", options))
+            self.get_option("target-proxy-name", options),
+            logger=current_app.logger)
 
         gcp.add_certificate(name, body, private_key, cert_chain)
