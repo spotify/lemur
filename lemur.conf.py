@@ -72,7 +72,7 @@ LOG_LEVEL = str(os.environ.get("LOG_LEVEL", "DEBUG"))
 # LOG_FILE = str(os.environ.get('LOG_FILE','/home/lemur/.lemur/lemur.log'))
 
 SQLALCHEMY_DATABASE_URI = os.environ.get(
-    "SQLALCHEMY_DATABASE_URI", "postgresql://lemur:lemur@localhost:5432/lemur"
+    "SQLALCHEMY_DATABASE_URI", "postgresql://lemur:lemur@host.docker.internal:5432/lemur"
 )
 
 # DigiCert Plugin (CertCentral, API v2)
@@ -103,7 +103,7 @@ YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
 CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----"""
 
-REDIS_HOST = os.environ.get("REDIS_HOST", "172.17.0.1") 
+REDIS_HOST = os.environ.get("REDIS_HOST", "host.docker.internal") 
 REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
 REDIS_DB = os.environ.get("REDIS_DB", "0")
 
