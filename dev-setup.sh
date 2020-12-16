@@ -16,8 +16,9 @@ docker run -it --rm gcr.io/xpn-cert-management/lemur:latest \
 LOCALHOST="host.docker.internal" 
 # # if you're on linux, uncomment these lines to avoid resolve issues
 # # (see https://stackoverflow.com/questions/48546124/what-is-linux-equivalent-of-host-docker-internal)
-# LOCALHOST="172.17.0.1"
+LOCALHOST="172.17.0.1"
 echo SQLALCHEMY_DATABASE_URI="postgresql://lemur:lemur@${LOCALHOST}:5432/lemur" >> .lemur-env
+echo REDIS_HOST=${LOCALHOST} >> .lemur-env
 
 echo "[dev-setup] initializing database..."
 docker run -it --rm \

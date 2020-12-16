@@ -17,7 +17,6 @@ FROM python:3.7
 RUN apt-get update
 RUN apt-get install -y libldap2-dev libsasl2-dev libldap2-dev libssl-dev
 RUN apt-get install -y nginx
-RUN apt-get install -y redis
 RUN apt-get install -y supervisor
 
 WORKDIR /app
