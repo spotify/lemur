@@ -1,5 +1,5 @@
 import os
-import random
+import secrets
 import string
 import base64
 from ast import literal_eval
@@ -11,10 +11,29 @@ debug = True
 
 
 def get_random_secret(length):
-    secret_key = ''.join(random.choice(string.ascii_uppercase) for x in range(round(length / 4)))
-    secret_key = secret_key + ''.join(random.choice("~!@#$%^&*()_+") for x in range(round(length / 4)))
-    secret_key = secret_key + ''.join(random.choice(string.ascii_lowercase) for x in range(round(length / 4)))
-    return secret_key + ''.join(random.choice(string.digits) for x in range(round(length / 4)))
+    """Creates a cryptographically strong random string of the specified 
+    length. It will contain at least one character from each character class 
+    (lower, upper, digit, special chars) to conform with legacy password 
+    policies.
+
+    Args:
+        length (int): length of the secret (number of characters) 
+
+    Returns:
+        str: cryptographically strong random string of the specified length
+    """
+    special_chars = "~!@#$%^&*()_+"
+    alphabet = string.ascii_letters + string.digits + special_chars
+    while True:
+        secret = "".join(secrets.choice(alphabet) for i in range(length))
+        if (
+            any(c.islower() for c in secret)
+            and any(c.isupper() for c in secret)
+            and any(c.isdigit() for c in secret)
+            and any(c in special_chars for c in secret)
+        ):
+            break
+    return secret
 
 
 SECRET_KEY = repr(os.environ.get('SECRET_KEY', get_random_secret(32).encode('utf8')))
