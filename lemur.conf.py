@@ -1,5 +1,4 @@
 import os
-import random
 import secrets
 import string
 import base64
@@ -12,6 +11,17 @@ debug = True
 
 
 def get_random_secret(length):
+    """Creates a cryptographically strong random string of the specified 
+    length. It will contain at least one character from each character class 
+    (lower, upper, digit, special chars) to conform with legacy password 
+    policies.
+
+    Args:
+        length (int): length of the secret (number of characters) 
+
+    Returns:
+        str: cryptographically strong random string of the specified length
+    """
     special_chars = "~!@#$%^&*()_+"
     alphabet = string.ascii_letters + string.digits + special_chars
     while True:
