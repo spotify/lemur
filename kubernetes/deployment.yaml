@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: lemur
-  namespace: cert-management 
+  namespace: cert-management
 spec:
   selector:
     matchLabels:
@@ -14,7 +14,7 @@ spec:
         role: spotifylemur
     spec:
       containers:
-      - name: lemur 
+      - name: lemur
         image: $DEPLOYMENT_IMAGE
         env:
         - name: LEMUR_ENCRYPTION_KEYS
@@ -26,17 +26,22 @@ spec:
           valueFrom:
             secretKeyRef:
               name: 'lemur-secrets'
-              key: 'lemur.SQLALCHEMY_DATABASE_URI'
+              key: 'spotifylemur.SQLALCHEMY_DATABASE_URI'
         - name: LEMUR_TOKEN_SECRET
           valueFrom:
             secretKeyRef:
               name: 'lemur-secrets'
-              key: 'lemur.LEMUR_TOKEN_SECRET'
+              key: 'spotifylemur.LEMUR_TOKEN_SECRET'
         - name: SECRET_KEY
           valueFrom:
             secretKeyRef:
               name: 'lemur-secrets'
-              key: 'lemur.SECRET_KEY'
+              key: 'spotifylemur.SECRET_KEY'
+        - name: GOOGLE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.GOOGLE_SECRET'
         ports:
         - name: http
           containerPort: 80
@@ -62,7 +67,7 @@ spec:
         resources:
           requests:
             cpu: 1
-            memory: 1Gi
+            memory: 2Gi
           limits:
             cpu: 2
             memory: 2Gi

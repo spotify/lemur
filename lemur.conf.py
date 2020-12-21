@@ -7,7 +7,7 @@ from ast import literal_eval
 _basedir = os.path.abspath(os.path.dirname(__file__))
 
 CORS = os.environ.get("CORS") == "True"
-debug = os.environ.get("DEBUG") == "True"
+debug = True
 
 
 def get_random_secret(length):
@@ -55,8 +55,6 @@ LEMUR_DEFAULT_ORGANIZATIONAL_UNIT = str(
 
 LEMUR_DEFAULT_ISSUER_PLUGIN = str(os.environ.get("LEMUR_DEFAULT_ISSUER_PLUGIN", ""))
 LEMUR_DEFAULT_AUTHORITY = str(os.environ.get("LEMUR_DEFAULT_AUTHORITY", ""))
-
-ACTIVE_PROVIDERS = []
 
 METRIC_PROVIDERS = []
 
