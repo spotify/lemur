@@ -4,14 +4,32 @@ import google.auth
 import backoff
 import hashlib
 import logging
+import pathlib
+
 
 class Gcp:
     def __init__(self, gcp_project, target_lb, logger=None, http=None):
+        """Create the GCP class"""
+
         self.gcp_project = gcp_project
         self.target_lb = target_lb
-        credentials, _ = google.auth.default()
-        self.client = discovery.build('compute', 'v1', credentials=credentials)
         self.logger = logger if logger else logging.getLogger(__name__)
+
+        # Disable cache_discovery to prevent file_cache is unavailable when
+        # using oauth2client >= 4.0.0 or google-auth error.
+        # https://github.com/googleapis/google-api-python-client/issues/299#issuecomment-268915510
+        args = {"cache_discovery": False}
+
+        # http allows setting a custom http client, for example for testing.
+        # The arguments http and credentials are mutually exclusive.
+        if http:
+            args["http"] = http
+        else:
+            credentials, _ = google.auth.default()
+            args["credentials"] = credentials
+
+        # Create the google client with the key word arguments from above
+        self.client = discovery.build("compute", "v1", **args)
 
     def create_gcp_certificate(self, name, cert, private_key, cert_chain):
         # returns a resource identifier which we can use in the LB
@@ -31,8 +49,8 @@ class Gcp:
         # make sure certificate doesn't exist in the GCP project
         try:
             request = self.client.sslCertificates().get(
-                project=self.gcp_project,
-                sslCertificate=name)
+                project=self.gcp_project, sslCertificate=name
+            )
             response = request.execute()
 
             # TODO: Make sure we're actually looking at the same certificate
@@ -54,7 +72,9 @@ class Gcp:
             "privateKey": private_key,
         }
 
-        request = self.client.sslCertificates().insert(project=self.gcp_project, body=ssl_certificate_body)
+        request = self.client.sslCertificates().insert(
+            project=self.gcp_project, body=ssl_certificate_body
+        )
         response = request.execute()
 
         return response["targetLink"]
@@ -62,28 +82,25 @@ class Gcp:
     def get_load_balancer(self):
         # returns a load balancer from gcp
         request = self.client.targetHttpsProxies().get(
-            project=self.gcp_project,
-            targetHttpsProxy=self.target_lb
+            project=self.gcp_project, targetHttpsProxy=self.target_lb
         )
         response = request.execute()
-
         return response
 
     @backoff.on_exception(backoff.expo, googleapiclient.errors.HttpError, max_time=30)
     def update_load_balancer_ssl_certificates(self, certificate_list):
         # must check that number of certificates are <= 16, if not throw something
-        request_body = {
-            "sslCertificates": certificate_list
-        }
-        
+        request_body = {"sslCertificates": certificate_list}
+
         if len(request_body["sslCertificates"]) > 16:
-            raise ValueError(f"Too many certificates {len(request_body['sslCertificates'])}. Max number is 16")
+            raise ValueError(
+                f"Too many certificates {len(request_body['sslCertificates'])}. Max number is 16"
+            )
 
         self.logger.debug(f"Updating GFE {self.target_lb}")
         request = self.client.targetHttpsProxies().setSslCertificates(
-            project=self.gcp_project,
-            targetHttpsProxy=self.target_lb,
-            body=request_body)
+            project=self.gcp_project, targetHttpsProxy=self.target_lb, body=request_body
+        )
         response = request.execute()
 
     def add_certificate(self, name, cert, private_key, cert_chain):
@@ -109,15 +126,22 @@ class Gcp:
             self.logger.info(f"Attaching cert {name} to {self.target_lb}")
             self.update_load_balancer_ssl_certificates(new_certificate_list)
         else:
-            self.logger.info(f"Target GFE {self.target_lb} already has cert {cert_name} attached, skipping.")
+            self.logger.info(
+                f"Target GFE {self.target_lb} already has cert {cert_name} attached, skipping."
+            )
 
 
 if __name__ == "__main__":
-    with open("../tests/assets/cert.pem") as f:
+
+    folder = pathlib.Path(__file__).resolve().parent
+    with open(folder / "../tests/assets/cert.pem") as f:
         cert = f.read()
 
-    with open("../tests/assets/key.pem") as f:
+    with open(folder / "../tests/assets/key.pem") as f:
         key = f.read()
 
+    logging.basicConfig(level=logging.DEBUG)
     gcp = Gcp("xpn-cert-management", "https-test-lb-target-proxy")
-    gcp.add_certificate("example.com-selfsigned-20201124-20211124-B4DA1AE31F71BDCB", cert, key, None)
+    gcp.add_certificate(
+        "example.com-selfsigned-20201124-20211124-B4DA1AE31F71BDCB", cert, key, None
+    )

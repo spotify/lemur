@@ -1,0 +1,18 @@
+{
+  "id": "4626654063224203912",
+  "creationTimestamp": "2020-11-18T04:32:39.304-08:00",
+  "name": "https-test-lb-target-proxy",
+  "selfLink": "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/targetHttpsProxies/https-test-lb-target-proxy",
+  "urlMap": "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/urlMaps/https-test-lb",
+  "sslCertificates": [
+    "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/sslCertificates/example-com-selfsigned-20201124-20211124-b4da1ae31f71bdcb",
+    "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/sslCertificates/example2-com-selfsignedcert-20201126-20201203-2f320061-a49d771",
+    "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/sslCertificates/example2-com-selfsignedcert-20201126-20201203",
+    "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/sslCertificates/example-org-selfsignedcert-20201126-20210429-a81e042cd-eeaf1af",
+    "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/sslCertificates/example-com-selfsignedcert-20201126-20201205-347f919f8-dfbcd88",
+    "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/sslCertificates/self-signed-com-selfsignedcert-20201126-20201205-9de68-61827b4",
+    "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/sslCertificates/example-com"
+  ],
+  "quicOverride": "NONE",
+  "kind": "compute#targetHttpsProxy"
+}
