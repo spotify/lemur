@@ -46,7 +46,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: 'lemur-secrets'
-              key: 'spotifylemur. DIGICERT_API_KEY'
+              key: 'spotifylemur.DIGICERT_API_KEY'
+        - name: REDIS_PASSWORD 
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.REDIS_PASSWORD'
         ports:
         - name: http
           containerPort: 80
