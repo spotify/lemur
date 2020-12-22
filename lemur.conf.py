@@ -2,9 +2,8 @@ import os
 import secrets
 import string
 import base64
-from ast import literal_eval
+from celery.task.schedules import crontab
 
-_basedir = os.path.abspath(os.path.dirname(__file__))
 
 CORS = os.environ.get("CORS") == "True"
 debug = True
@@ -99,7 +98,8 @@ YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
 CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----"""
 
-REDIS_HOST = os.environ.get("REDIS_HOST", "host.docker.internal") 
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+REDIS_HOST = os.environ.get("REDIS_HOST", f":{REDIS_PASSWORD}@lemur-redis.services.gew1.spotify.net") 
 REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
 REDIS_DB = os.environ.get("REDIS_DB", "0")
 
