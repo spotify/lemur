@@ -2,7 +2,7 @@ import pytest
 
 import googleapiclient.http
 
-from .context import plugin_dest_gcp
+import plugin_dest_gcp.gcp
 
 
 @pytest.fixture
