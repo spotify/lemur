@@ -27,7 +27,7 @@ RUN pip install lemur-0.7.0-py2.py3-none-any.whl
 
 # install plugins
 COPY spotify-dest-gcp spotify-dest-gcp
-RUN cd spotify-dest-gcp && pip install -e . && cd ..
+RUN cd spotify-dest-gcp && pip install . && cd ..
 
 # copy static files from builder
 COPY --from=builder /app/lemur/static/dist /opt/lemur/static
