@@ -76,7 +76,8 @@ class Gcp:
             "sslCertificates": certificate_list
         }
         
-        assert len(request_body["sslCertificates"]) <= 16
+        if len(request_body["sslCertificates"]) > 16:
+            raise ValueError(f"Too many certificates {len(request_body['sslCertificates'])}. Max number is 16")
 
         self.logger.debug(f"Updating GFE {self.target_lb}")
         request = self.client.targetHttpsProxies().setSslCertificates(
@@ -102,7 +103,8 @@ class Gcp:
             new_certificate_list = [cert_name] + ssl_certificates
 
             # sanity check before setting ssl certificates
-            assert len(new_certificate_list) >= len(ssl_certificates)
+            if len(new_certificate_list) < len(ssl_certificates):
+                raise RuntimeError("Error when creating the new certificate list")
 
             self.logger.info(f"Attaching cert {name} to {self.target_lb}")
             self.update_load_balancer_ssl_certificates(new_certificate_list)
