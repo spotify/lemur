@@ -38,9 +38,6 @@ COPY nginx.conf /etc/nginx/sites-available/default
 RUN mkdir -p /var/log/supervisor
 COPY supervisord.conf .
 
-# create users
-RUN useradd celery 
-
 EXPOSE 80
 
 # ENTRYPOINT [ "lemur" ]
