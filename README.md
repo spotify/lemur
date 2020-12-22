@@ -47,6 +47,11 @@ docker run -it --rm --env-file .lemur-env -p 8080:80 spotify-lemur
 You should now be able to access Lemur at http://localhost:8080. Login with
 the user `lemur` and the password you created during the setup phase.
 
+## Testing Digicert API Integration
+
+If you want to test the lemur's Digicert Plugin, please add the `DIGICERT_API_KEY` variable to the `.lemur-env` file.
+
+You may find the `DIGICERT_API_KEY` in the LastPass's Lemur shared folder, for testing please use the **(testing)** key.
 
 ## Working with patches
 
