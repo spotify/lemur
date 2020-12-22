@@ -79,13 +79,13 @@ GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 LOG_LEVEL = str(os.environ.get('LOG_LEVEL','DEBUG'))
 # LOG_FILE = str(os.environ.get('LOG_FILE','/home/lemur/.lemur/lemur.log'))
 
-SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','postgresql://lemur:lemur@localhost:5432/lemur')
+SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','postgresql://lemur:lemur@host.docker.internal:5432/lemur')
 
 # DigiCert Plugin (CertCentral, API v2)
 DIGICERT_URL = "https://www.digicert.com"
 DIGICERT_API_KEY = os.environ.get("DIGICERT_API_KEY")
 DIGICERT_ORG_ID = "130680"
-DIGICERT_ORDER_TYPE = "ssl_plus"
+DIGICERT_ORDER_TYPE = "ssl"
 DIGICERT_ROOT = """-----BEGIN CERTIFICATE-----
 MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
 MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
@@ -119,3 +119,12 @@ CELERY_BROKER_URL = CELERY_RESULT_BACKEND
 CELERY_IMPORTS = "lemur.common.celery"
 CELERY_TIMEZONE = "UTC"
 
+CELERYBEAT_SCHEDULE = {
+    'fetch_all_pending_acme_certs': {
+        'task': 'lemur.common.celery.fetch_all_pending_certs',
+        'options': {
+            'expires': 180
+        },
+        'schedule': crontab(minute="*"),
+    },
+}
