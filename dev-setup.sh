@@ -13,10 +13,13 @@ docker run -it --rm gcr.io/xpn-cert-management/lemur:latest \
     sh -c "lemur create_config > /dev/null 2>&1 && cat ~/.lemur/lemur.conf.py | grep -E 'SECRET_KEY|LEMUR_TOKEN_SECRET|LEMUR_ENCRYPTION_KEYS' | sed 's/['\'' ]//g'" \
     > $LEMUR_ENV
 
-LOCALHOST="host.docker.internal" 
-# # if you're on linux, uncomment these lines to avoid resolve issues
-# # (see https://stackoverflow.com/questions/48546124/what-is-linux-equivalent-of-host-docker-internal)
-# LOCALHOST="172.17.0.1"
+LOCALHOST="host.docker.internal"
+# Set LOCALHOST for linux to fix resolve issue
+# (see https://stackoverflow.com/questions/48546124/what-is-linux-equivalent-of-host-docker-internal)
+if [ "$(uname)" == "Linux" ]; then
+    LOCALHOST="172.17.0.1"
+fi
+
 echo SQLALCHEMY_DATABASE_URI="postgresql://lemur:lemur@${LOCALHOST}:5432/lemur" >> .lemur-env
 echo REDIS_HOST=${LOCALHOST} >> .lemur-env
 
@@ -30,4 +33,3 @@ docker run -it --rm \
     lemur init
 
 echo "[dev-setup] done!"
-

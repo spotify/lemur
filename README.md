@@ -18,9 +18,6 @@ The `POSTGRES_PASSWORD` environment is only needed during the first run of
 
 ### Create Lemur environment and initialize database
 
-If you're on linux, you need to edit the `dev-setup.sh` and uncomment the lines
-where it says so.
-
 ```bash
 ./dev-setup.sh
 ```
