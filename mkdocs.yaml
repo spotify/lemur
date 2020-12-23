@@ -1,0 +1,7 @@
+# Define docs name and description 
+# Nothing is needed for Tingle, but the following is needed for building locally
+# See https://backstage.spotify.net/docs/docs/ for more info
+site_name: spotifylemur 
+site_description: Customized Lemur deployment on Spotify for managing SSL/TLS certificates.
+markdown_extensions:
+  - mkautodoc

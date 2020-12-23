@@ -99,6 +99,8 @@ venv.bak/
 
 # mkdocs documentation
 /site
+docs/style.css
+mkdocs*.yml~
 
 # mypy
 .mypy_cache/
