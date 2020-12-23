@@ -1,0 +1,29 @@
+[MASTER]
+
+# Pydantic will be installed as a compiled C extension if Cython is available,
+# or on most Linux dists. Pylint does not lint/import C extensions as default,
+# but that can be turned on by setting the --extension-pkg-whitelist flag. This
+# is required to get builds to pass in the tox action container.
+# https://pydantic-docs.helpmanual.io/install/
+# http://pylint.pycqa.org/en/latest/technical_reference/c_extensions.html
+extension-pkg-whitelist=pydantic
+
+[FORMAT]
+
+max-line-length=120
+
+[MESSAGES CONTROL]
+
+# ignore a lot of things to prevent the need for comments/disabling in the code
+# base and still get the basic linting (bad code, undefined variables, …)
+disable=invalid-name,
+        too-many-instance-attributes,
+        too-few-public-methods,
+        too-many-arguments,
+        logging-format-interpolation,
+        logging-fstring-interpolation,
+        fixme,
+        missing-module-docstring,
+        missing-class-docstring,
+        missing-function-docstring,
+        no-member, # googles automatically generated classes throws no-member errors
