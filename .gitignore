@@ -106,3 +106,10 @@ venv.bak/
 # direnv
 .envrc
 .direnv/
+
+# vscode
+.vscode
+
+# lemur custom
+Dockerfile.local-dev
+.lemur-env
