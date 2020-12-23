@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lemur-celery-worker
+  namespace: cert-management
+spec:
+  selector:
+    matchLabels:
+      app: lemur-celery-worker
+  template:
+    metadata:
+      labels:
+        app: lemur-celery-worker
+        role: spotifylemur
+    spec:
+      containers:
+      - name: lemur
+        image: $DEPLOYMENT_IMAGE
+        command: ["celery"]
+        args: ["-A", "lemur.common.celery", "worker", "--concurrency", "1", "-E"]
+        env:
+        - name: LEMUR_ENCRYPTION_KEYS
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.LEMUR_ENCRYPTION_KEYS'
+        - name: SQLALCHEMY_DATABASE_URI
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.SQLALCHEMY_DATABASE_URI'
+        - name: LEMUR_TOKEN_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.LEMUR_TOKEN_SECRET'
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.SECRET_KEY'
+        - name: GOOGLE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.GOOGLE_SECRET'
+        - name: DIGICERT_API_KEY 
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.DIGICERT_API_KEY'
+        resources:
+          requests:
+            cpu: 1
+            memory: 1Gi
+          limits:
+            cpu: 1
+            memory: 1Gi
+      - name: cloudsql-proxy
+        image: gcr.io/cloudsql-docker/gce-proxy:1.16
+        command: ["/cloud_sql_proxy", "-instances=xpn-cert-management:europe-west1:lemur=tcp:5432"]
+        securityContext:
+          runAsUser: 2  # non-root user
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: 1
+            memory: 2Gi
+          limits:
+            cpu: 2
+            memory: 2Gi
