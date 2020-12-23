@@ -5,6 +5,7 @@ import backoff
 import hashlib
 import logging
 import pathlib
+import re
 
 
 class Gcp:
@@ -31,10 +32,9 @@ class Gcp:
         # Create the google client with the key word arguments from above
         self.client = discovery.build("compute", "v1", **args)
 
-    def create_gcp_certificate(self, name, cert, private_key, cert_chain):
-        # returns a resource identifier which we can use in the LB
-        # check if it already exists
-
+    @staticmethod
+    def create_cert_name(name):
+        """Returns a Google approved name for the certificate"""
         # replace . with - in the certificate name
         # TODO: Match against  the regex provided by Google: '[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?|[1-9][0-9]{0,19}'
         name = name.replace(".", "-").lower()
@@ -45,6 +45,11 @@ class Gcp:
         max_length = 62
         if len(name) > max_length:
             name = f"{name[:max_length-8]}-{hashlib.sha256(name.encode('UTF-8')).hexdigest()[:7]}"
+
+        return name
+
+    def create_gcp_certificate(self, name, cert, private_key, cert_chain):
+        name = create_cert_name(name)
 
         # make sure certificate doesn't exist in the GCP project
         try:

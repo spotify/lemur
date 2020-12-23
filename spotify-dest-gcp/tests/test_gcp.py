@@ -2,20 +2,6 @@ import pathlib
 import json
 
 
-# def test_add_certificate(get_gcp_client, test_certificate):
-#     client = get_gcp_client(
-#         [
-#             # (headers, body),
-#         ]
-#     )
-
-#     cert_name, cert, key = test_certificate
-
-#     client.add_certificate(cert_name, cert, key, None)
-
-#     assert False
-
-
 def test_get_load_balancers(get_gcp_client):
     """Test that the client can get a load balancer.
 
