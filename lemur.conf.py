@@ -77,7 +77,7 @@ GOOGLE_CLIENT_ID = str(os.environ.get('GOOGLE_CLIENT_ID','421791425557-lfk56lqi3
 GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
 LOG_LEVEL = str(os.environ.get('LOG_LEVEL','DEBUG'))
-# LOG_FILE = str(os.environ.get('LOG_FILE','/home/lemur/.lemur/lemur.log'))
+LOG_FILE = str(os.environ.get('LOG_FILE','lemur.log'))
 
 SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','postgresql://lemur:lemur@host.docker.internal:5432/lemur')
 
@@ -120,7 +120,7 @@ CELERY_IMPORTS = "lemur.common.celery"
 CELERY_TIMEZONE = "UTC"
 
 CELERYBEAT_SCHEDULE = {
-    'fetch_all_pending_acme_certs': {
+    'fetch_all_pending_certs': {
         'task': 'lemur.common.celery.fetch_all_pending_certs',
         'options': {
             'expires': 180
