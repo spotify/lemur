@@ -105,6 +105,10 @@ mkdocs*.yml~
 # mypy
 .mypy_cache/
 
+# direnv
+.envrc
+.direnv/
+
 # vscode
 .vscode
 
