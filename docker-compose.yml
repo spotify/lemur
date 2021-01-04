@@ -15,6 +15,16 @@ services:
     image: "redis:alpine"
     ports:
       - "6379:6379"
+  celery-beat:
+    image: spotify-lemur
+    command: "celery -A lemur.common.celery beat"
+    env_file: 
+    - ".lemur-env"
+  celery-worker:
+    image: spotify-lemur
+    command: celery -A lemur.common.celery worker --concurrency 10 -E -n lemurworker1@%%h
+    env_file:
+    - ".lemur-env"
 
 volumes:
   pgdata:
