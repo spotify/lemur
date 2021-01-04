@@ -56,8 +56,19 @@ LEMUR_DEFAULT_LOCATION = str(os.environ.get('LEMUR_DEFAULT_LOCATION',''))
 LEMUR_DEFAULT_ORGANIZATION = str(os.environ.get('LEMUR_DEFAULT_ORGANIZATION',''))
 LEMUR_DEFAULT_ORGANIZATIONAL_UNIT = str(os.environ.get('LEMUR_DEFAULT_ORGANIZATIONAL_UNIT',''))
 
-LEMUR_DEFAULT_ISSUER_PLUGIN = str(os.environ.get('LEMUR_DEFAULT_ISSUER_PLUGIN',''))
-LEMUR_DEFAULT_AUTHORITY = str(os.environ.get('LEMUR_DEFAULT_AUTHORITY',''))
+PLUGINS = [
+    'email_notification',
+    'slack_notification',
+    'java_truststore_export',
+    'java_keystore_export',
+    'openssl_export',
+    'cryptography_issuer',
+    'digicert_issuer',
+    'csr_export',
+]
+
+LEMUR_DEFAULT_ISSUER_PLUGIN = 'digicert_issuer'
+LEMUR_DEFAULT_AUTHORITY = 'digicert' 
 
 METRIC_PROVIDERS = []
 
