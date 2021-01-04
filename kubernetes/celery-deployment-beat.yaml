@@ -34,6 +34,11 @@ spec:
             secretKeyRef:
               name: 'lemur-secrets'
               key: 'spotifylemur.DIGICERT_API_KEY'
+        - name: REDIS_PASSWORD 
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.REDIS_PASSWORD'
         resources:
           requests:
             cpu: 1
