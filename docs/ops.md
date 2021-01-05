@@ -17,11 +17,11 @@
 
 * Web interface [certs.spotify.net](https://certs.spotify.net) edge-proxy configuration [lemur-perimeter.yaml](https://ghe.spotify.net/edge/edge-control-service/blob/06177be6ca8fa9a376c7b72cbe2582e5c342728d/exposed-services/lemur-perimeter.yaml)
 
-* On GKE we deploy
-  * lemur container
-  * celery worker
-  * celery beat scheduler
-  * [redis](https://ghe.spotify.net/wasabi/spotify-lemur-redis/)
+* On GKE we deploy the following workloads (all in the `cert-management` namespace):
+  * [lemur](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/lemur/overview?project=gke-xpn-1), serving the web interface (containers: lemur, cloudsql-proxy)
+  * [lemur-celery-beat](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/lemur-celery-beat?project=gke-xpn-1) scheduler (containers: lemur, cloudsql-proxy)
+  * [lemur-celery-worker](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/lemur-celery-worker?project=gke-xpn-1) (containers: lemur, cloudsql-proxy)
+  * [lemur-redis-primary-deployment](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-4133/cert-management/lemur-redis-primary-deployment?project=gke-xpn-1) (containers: redis)
 
 ## Logging and Monitoring
 
