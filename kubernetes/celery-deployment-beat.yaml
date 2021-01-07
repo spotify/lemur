@@ -1,21 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: lemur
+  name: lemur-celery-beat
   namespace: cert-management
 spec:
   selector:
     matchLabels:
-      app: lemur
+      app: lemur-celery-beat
   template:
     metadata:
       labels:
-        app: lemur
+        app: lemur-celery-beat
         role: spotifylemur
     spec:
       containers:
       - name: lemur
         image: $DEPLOYMENT_IMAGE
+        command: ["celery"]
+        args: ["-A", "lemur.common.celery", "beat"]
         env:
         - name: LEMUR_ENCRYPTION_KEYS
           valueFrom:
@@ -27,21 +29,6 @@ spec:
             secretKeyRef:
               name: 'lemur-secrets'
               key: 'spotifylemur.SQLALCHEMY_DATABASE_URI'
-        - name: LEMUR_TOKEN_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: 'lemur-secrets'
-              key: 'spotifylemur.LEMUR_TOKEN_SECRET'
-        - name: SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: 'lemur-secrets'
-              key: 'spotifylemur.SECRET_KEY'
-        - name: GOOGLE_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: 'lemur-secrets'
-              key: 'spotifylemur.GOOGLE_SECRET'
         - name: DIGICERT_API_KEY 
           valueFrom:
             secretKeyRef:
@@ -52,22 +39,13 @@ spec:
             secretKeyRef:
               name: 'lemur-secrets'
               key: 'spotifylemur.REDIS_PASSWORD'
-        ports:
-        - name: http
-          containerPort: 80
-          protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: /api/1/healthcheck
-            port: http
-            scheme: HTTP
         resources:
           requests:
             cpu: 1
-            memory: 2Gi
+            memory: 1Gi
           limits:
-            cpu: 2
-            memory: 2Gi
+            cpu: 1
+            memory: 1Gi
       - name: cloudsql-proxy
         image: gcr.io/cloudsql-docker/gce-proxy:1.16
         command: ["/cloud_sql_proxy", "-instances=xpn-cert-management:europe-west1:lemur=tcp:5432"]

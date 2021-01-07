@@ -2,9 +2,8 @@ import os
 import secrets
 import string
 import base64
-from ast import literal_eval
+from celery.task.schedules import crontab
 
-_basedir = os.path.abspath(os.path.dirname(__file__))
 
 CORS = os.environ.get("CORS") == "True"
 debug = True
@@ -56,8 +55,19 @@ LEMUR_DEFAULT_LOCATION = str(os.environ.get('LEMUR_DEFAULT_LOCATION',''))
 LEMUR_DEFAULT_ORGANIZATION = str(os.environ.get('LEMUR_DEFAULT_ORGANIZATION',''))
 LEMUR_DEFAULT_ORGANIZATIONAL_UNIT = str(os.environ.get('LEMUR_DEFAULT_ORGANIZATIONAL_UNIT',''))
 
-LEMUR_DEFAULT_ISSUER_PLUGIN = str(os.environ.get('LEMUR_DEFAULT_ISSUER_PLUGIN',''))
-LEMUR_DEFAULT_AUTHORITY = str(os.environ.get('LEMUR_DEFAULT_AUTHORITY',''))
+PLUGINS = [
+    'email_notification',
+    'slack_notification',
+    'java_truststore_export',
+    'java_keystore_export',
+    'openssl_export',
+    'cryptography_issuer',
+    'digicert_issuer',
+    'csr_export',
+]
+
+LEMUR_DEFAULT_ISSUER_PLUGIN = 'digicert_issuer'
+LEMUR_DEFAULT_AUTHORITY = 'digicert' 
 
 METRIC_PROVIDERS = []
 
@@ -67,15 +77,15 @@ GOOGLE_CLIENT_ID = str(os.environ.get('GOOGLE_CLIENT_ID','421791425557-lfk56lqi3
 GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
 LOG_LEVEL = str(os.environ.get('LOG_LEVEL','DEBUG'))
-# LOG_FILE = str(os.environ.get('LOG_FILE','/home/lemur/.lemur/lemur.log'))
+LOG_FILE = str(os.environ.get('LOG_FILE','lemur.log'))
 
-SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','postgresql://lemur:lemur@localhost:5432/lemur')
+SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','postgresql://lemur:lemur@host.docker.internal:5432/lemur')
 
 # DigiCert Plugin (CertCentral, API v2)
 DIGICERT_URL = "https://www.digicert.com"
 DIGICERT_API_KEY = os.environ.get("DIGICERT_API_KEY")
 DIGICERT_ORG_ID = "130680"
-DIGICERT_ORDER_TYPE = "ssl_plus"
+DIGICERT_ORDER_TYPE = "ssl"
 DIGICERT_ROOT = """-----BEGIN CERTIFICATE-----
 MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
 MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
@@ -99,7 +109,8 @@ YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
 CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----"""
 
-REDIS_HOST = os.environ.get("REDIS_HOST", "host.docker.internal") 
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+REDIS_HOST = os.environ.get("REDIS_HOST", f"redis:{REDIS_PASSWORD}@lemur-redis.services.gew1.spotify.net") 
 REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
 REDIS_DB = os.environ.get("REDIS_DB", "0")
 
@@ -108,3 +119,12 @@ CELERY_BROKER_URL = CELERY_RESULT_BACKEND
 CELERY_IMPORTS = "lemur.common.celery"
 CELERY_TIMEZONE = "UTC"
 
+CELERYBEAT_SCHEDULE = {
+    'fetch_all_pending_certs': {
+        'task': 'lemur.common.celery.fetch_all_pending_certs',
+        'options': {
+            'expires': 180
+        },
+        'schedule': crontab(minute="*/5"), # every 5 minutes
+    },
+}

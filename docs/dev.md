@@ -1,13 +1,13 @@
-# Netflix/Lemur @ Spotify
-Lemur deployment on Spotify infra
+# Lemur Dev Handbook
 
 ## Setting up a dev environment
 `Requirements: Docker and docker-compose`
 
 Everything below uses Docker to setup the environment so Python and
-the required dependencies for Lemur shouldn't be needed.
+the required dependencies for Lemur shouldn't be needed. So no need to create
+a python virtual env either.
 
-### Start and setup PostgreSQL:
+### Start PostgreSQL, Redis and Celery in docker-compose:
 ```bash
 # replace <PASSWORD> with the password you want to set on the postgres user
 POSTGRES_PASSWORD=<PASSWORD> docker-compose up
@@ -16,7 +16,7 @@ POSTGRES_PASSWORD=<PASSWORD> docker-compose up
 The `POSTGRES_PASSWORD` environment is only needed during the first run of
 `docker-compose`.
 
-### Create Lemur environment and initialize database
+### Create Lemur env file and initialize database
 
 ```bash
 ./dev-setup.sh
@@ -44,6 +44,14 @@ docker run -it --rm --env-file .lemur-env -p 8080:80 spotify-lemur
 You should now be able to access Lemur at http://localhost:8080. Login with
 the user `lemur` and the password you created during the setup phase.
 
+## Testing Digicert API Integration
+
+If you want to test the lemur's Digicert Plugin, please add the 
+`DIGICERT_API_KEY` variable to the `.lemur-env` file. You find API key in the 
+LastPass's Lemur shared folder. For testing please use the **(testing)** key.
+
+Remember to never commit secrets to GHE. `.lemur-env` is listed in `.gitignore` 
+but still be careful not to check it in.
 
 ## Working with patches
 
@@ -51,6 +59,7 @@ If you want to change code in the upstream lemur repository, you can use patches
 instead:
 
 * Clone https://ghe.spotify.net/wasabi/lemur
+* Initialize the submodule with `git submodule update --init --recursive` 
 * Edit the files in the `lemur` subfolder you want to edit.
 * run `git diff --no-prefix > patches/<000-your-patch-name>.patch` to create a
   new patch file in the `patches` folder.
@@ -58,7 +67,7 @@ instead:
 These patches are [applied by the build-pipeline](https://ghe.spotify.net/wasabi/lemur/blob/master/build-info.yaml#L10-L15) 
 before building the docker image.
 
-### Local development with patches
+## Local development with patches
 
 In the [wasabi/lemur repo](https://ghe.spotify.net/wasabi/lemur), you can run
 ```bash
