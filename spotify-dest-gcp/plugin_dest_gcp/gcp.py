@@ -25,9 +25,10 @@ class Gcp:
         # The arguments http and credentials are mutually exclusive.
         if http:
             args["http"] = http
-        else:
-            credentials, _ = google.auth.default()
-            args["credentials"] = credentials
+        else:  # pragma: no coverage
+            # Ignore this statement in the coverage tests, as the tests would
+            # be fairly meaningless.
+            args["credentials"], _ = google.auth.default()
 
         # Create the google client with the key word arguments from above
         self.client = discovery.build("compute", "v1", **args)
@@ -49,9 +50,10 @@ class Gcp:
         return name
 
     def create_gcp_certificate(self, name, cert, private_key, cert_chain):
-        name = create_cert_name(name)
+        name = self.create_cert_name(name)
 
-        # make sure certificate doesn't exist in the GCP project
+        # Check if the certificate exists and the return the certificate link
+        # if it does.
         try:
             request = self.client.sslCertificates().get(
                 project=self.gcp_project, sslCertificate=name
@@ -61,10 +63,10 @@ class Gcp:
             # TODO: Make sure we're actually looking at the same certificate
             self.logger.info("Certificate existed, returning")
             return response["selfLink"]
+
         except googleapiclient.errors.HttpError as e:
             if e.resp.status != 404:
                 raise e
-            self.logger.info("Certificate does not exist, uploading")
 
         cert_bundle = cert
         if cert_chain:
@@ -106,7 +108,7 @@ class Gcp:
         request = self.client.targetHttpsProxies().setSslCertificates(
             project=self.gcp_project, targetHttpsProxy=self.target_lb, body=request_body
         )
-        response = request.execute()
+        request.execute()
 
     def add_certificate(self, name, cert, private_key, cert_chain):
         # Limitations:
@@ -140,7 +142,7 @@ if __name__ == "__main__":
 
     folder = pathlib.Path(__file__).resolve().parent
     with open(folder / "../tests/assets/cert.pem") as f:
-        cert = f.read()
+        cert_file = f.read()
 
     with open(folder / "../tests/assets/key.pem") as f:
         key = f.read()
@@ -148,5 +150,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     gcp = Gcp("xpn-cert-management", "https-test-lb-target-proxy")
     gcp.add_certificate(
-        "example.com-selfsigned-20201124-20211124-B4DA1AE31F71BDCB", cert, key, None
+        "example.com-selfsigned-20201124-20211124-B4DA1AE31F71BDCB",
+        cert_file,
+        key,
+        None,
     )

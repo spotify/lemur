@@ -1,6 +1,5 @@
 from flask import current_app  # pylint: disable=import-error
-from lemur.plugins.bases import \
-    DestinationPlugin  # pylint: disable=import-error
+from lemur.plugins.bases import DestinationPlugin  # pylint: disable=import-error
 
 from .gcp import Gcp
 

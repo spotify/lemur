@@ -1,0 +1,14 @@
+{
+  "id": "3408564173730917111",
+  "name": "operation-1610028055065-5b84fde4cf344-753dc7a3-28a02b04",
+  "operationType": "insert",
+  "targetLink": "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/sslCertificates/a-new-test-certificate",
+  "targetId": "7742577541404863223",
+  "status": "RUNNING",
+  "user": "viktora@spotify.com",
+  "progress": 0,
+  "insertTime": "2021-01-07T06:00:56.306-08:00",
+  "startTime": "2021-01-07T06:00:56.315-08:00",
+  "selfLink": "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/operations/operation-1610028055065-5b84fde4cf344-753dc7a3-28a02b04",
+  "kind": "compute#operation"
+}
