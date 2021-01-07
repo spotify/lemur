@@ -126,10 +126,6 @@ class Gcp:
             # insert the certificate into the list of ssl_certificates
             new_certificate_list = [cert_name] + ssl_certificates
 
-            # sanity check before setting ssl certificates
-            if len(new_certificate_list) < len(ssl_certificates):
-                raise RuntimeError("Error when creating the new certificate list")
-
             self.logger.info(f"Attaching cert {name} to {self.target_lb}")
             self.update_load_balancer_ssl_certificates(new_certificate_list)
         else:
