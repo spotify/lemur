@@ -1,7 +1,30 @@
-FROM gcr.io/xpn-cert-management/lemur:latest AS builder
+FROM python:3.7 AS public-lemur
 
-# build api
-# RUN python setup.py bdist_wheel -d /app/dist/
+RUN apt-get update && apt-get install -y \
+  curl \
+  make \
+  software-properties-common
+
+RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
+
+RUN apt-get update && apt-get install -y \
+  npm \
+  libldap2-dev \
+  libsasl2-dev \
+  libssl-dev
+
+RUN pip install pip==20.3.2
+RUN pip install -U \
+  bandit \
+  coveralls \
+  setuptools
+
+WORKDIR /app
+COPY public-lemur /app/
+RUN pip install -e .
+RUN pip install "file://`pwd`#egg=lemur[dev]"
+RUN pip install "file://`pwd`#egg=lemur[tests]"
+
 
 # build frontend
 # need to delete some left-overs from using submodules
@@ -12,21 +35,25 @@ RUN rm /app/.git
 RUN npm install --unsafe-perm
 RUN python setup.py sdist bdist_wheel
 
+
+# NEW STAGE ========================= (multi-stage build to keep image small)
 # TODO(jonaspalm): Switch to Spotify base image when they support Python 3.7
 FROM python:3.7
-RUN apt-get update
-RUN apt-get install -y libldap2-dev libsasl2-dev libldap2-dev libssl-dev
-RUN apt-get install -y nginx
-RUN apt-get install -y supervisor
-
+RUN apt-get update && apt-get install -y \
+  libldap2-dev \
+  libsasl2-dev \
+  libssl-dev \
+  nginx \
+  supervisor \
+  && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # install lemur wheel from builder
-COPY --from=builder /app/dist/lemur-0.7.0-py2.py3-none-any.whl .
-RUN pip install lemur-0.7.0-py2.py3-none-any.whl
+COPY --from=public-lemur /app/dist/lemur-0.8.0-py2.py3-none-any.whl .
+RUN pip install lemur-0.8.0-py2.py3-none-any.whl
 
 # copy static files from builder
-COPY --from=builder /app/lemur/static/dist /opt/lemur/static
+COPY --from=public-lemur /app/lemur/static/dist /opt/lemur/static
 
 COPY lemur.conf.py /opt/lemur/
 ENV LEMUR_CONF /opt/lemur/lemur.conf.py
