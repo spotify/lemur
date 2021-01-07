@@ -1,11 +1,11 @@
-from googleapiclient import discovery
-import googleapiclient.errors
-import google.auth
-import backoff
 import hashlib
 import logging
 import pathlib
-import re
+
+import backoff
+import google.auth
+import googleapiclient.errors
+from googleapiclient import discovery
 
 
 class Gcp:
