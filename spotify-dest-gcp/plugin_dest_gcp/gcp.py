@@ -108,7 +108,7 @@ class Gcp:
         request = self.client.targetHttpsProxies().setSslCertificates(
             project=self.gcp_project, targetHttpsProxy=self.target_lb, body=request_body
         )
-        request.execute()
+        return request.execute()
 
     def add_certificate(self, name, cert, private_key, cert_chain):
         # Limitations:

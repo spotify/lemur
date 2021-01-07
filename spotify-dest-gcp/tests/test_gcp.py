@@ -1,6 +1,8 @@
 import json
 import pathlib
 
+import pytest
+
 
 def test_get_load_balancers(get_gcp_client):
     """Test that the client can get a load balancer.
@@ -40,7 +42,6 @@ def test_create_cert_when_exists(get_gcp_client):
 
     Mocks the requests to Google with a preset response and compare the result.
     """
-    # Load the pre-defined cert
     test_folder = pathlib.Path(__file__).resolve().parent
 
     # Load the required test data
@@ -73,7 +74,6 @@ def test_create_certificate(get_gcp_client):
 
     Mocks the requests to Google with a preset response and compare the result.
     """
-    # Load the pre-defined cert
     test_folder = pathlib.Path(__file__).resolve().parent
 
     # Load the required test data
@@ -89,7 +89,7 @@ def test_create_certificate(get_gcp_client):
     # Create the client
     client = get_gcp_client(
         gcp_project="xpn-cert-management",
-        target_lb="https-test-lb-target-proxy",
+        target_lb="https-pthon-test-lb",
         responses=[
             ({"status": "404"}, "certificate does not exist"),
             ({"status": "200"}, create_cert_response),
@@ -104,3 +104,44 @@ def test_create_certificate(get_gcp_client):
         cert_link
         == "https://www.googleapis.com/compute/v1/projects/xpn-cert-management/global/sslCertificates/a-new-test-certificate"
     )
+
+
+def test_update_lb_ssl_cert(get_gcp_client):
+    """Test that the load balancer can be updated with a new certificate.
+
+    This is not a great test as we do not handle the response. This test does
+    not really test anything.
+    """
+
+    # Create the client
+    client = get_gcp_client(
+        gcp_project="xpn-cert-management",
+        target_lb="https-test-lb-target-proxy",
+        responses=[
+            (
+                {"status": "200"},
+                '{ "message": "success" }',
+            ),
+        ],
+    )
+
+    assert (
+        client.update_load_balancer_ssl_certificates(["cert-a", "cert-b"])["message"]
+        == "success"
+    )
+
+
+def test_update_lb_error(get_gcp_client):
+    """Test that the load balancer update raises ValueError with to many certs.
+
+    Mocks the request to GCP with preset responses.
+    """
+
+    # Create the client
+    client = get_gcp_client(
+        gcp_project="xpn-cert-management",
+        target_lb="https-test-lb-target-proxy",
+    )
+
+    with pytest.raises(ValueError):
+        client.update_load_balancer_ssl_certificates(["cert-a"] * 20)
