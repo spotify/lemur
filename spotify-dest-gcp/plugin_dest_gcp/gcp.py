@@ -136,22 +136,3 @@ class Gcp:
             self.logger.info(
                 f"Target GFE {self.target_lb} already has cert {cert_name} attached, skipping."
             )
-
-
-if __name__ == "__main__":
-
-    folder = pathlib.Path(__file__).resolve().parent
-    with open(folder / "../tests/assets/cert.pem") as f:
-        cert_file = f.read()
-
-    with open(folder / "../tests/assets/key.pem") as f:
-        key = f.read()
-
-    logging.basicConfig(level=logging.DEBUG)
-    gcp = Gcp("xpn-cert-management", "https-test-lb-target-proxy")
-    gcp.add_certificate(
-        "example.com-selfsigned-20201124-20211124-B4DA1AE31F71BDCB",
-        cert_file,
-        key,
-        None,
-    )
