@@ -17,7 +17,7 @@ RUN pip install pip==20.3.2
 RUN pip install -U \
   bandit \
   coveralls \
-  setuptools
+  setuptools==51.1.1
 
 WORKDIR /app
 COPY public-lemur /app/
