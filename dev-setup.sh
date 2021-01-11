@@ -9,7 +9,7 @@ if [[ -f "$LEMUR_ENV" ]]; then
 fi
 
 echo "[dev-setup] generating environment and saving it to .lemur-env..."
-docker run -it --rm gcr.io/xpn-cert-management/lemur:latest \
+docker run -it --rm gcr.io/xpn-cert-management/spotify-lemur:latest \
     sh -c "lemur create_config > /dev/null 2>&1 && cat ~/.lemur/lemur.conf.py | grep -E 'SECRET_KEY|LEMUR_TOKEN_SECRET|LEMUR_ENCRYPTION_KEYS' | sed 's/['\'' ]//g'" \
     > $LEMUR_ENV
 
@@ -26,7 +26,7 @@ docker run -it --rm \
     --env-file $LEMUR_ENV \
     -e LEMUR_CONF="/app/lemur.conf.py" \
     -w /app/lemur \
-    gcr.io/xpn-cert-management/lemur:latest \
+    gcr.io/xpn-cert-management/spotify-lemur:latest \
     lemur init
 
 echo "[dev-setup] done!"

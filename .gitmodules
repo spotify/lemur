@@ -1,0 +1,3 @@
+[submodule "public-lemur"]
+	path = public-lemur
+	url = https://github.com/spotify/lemur.git
