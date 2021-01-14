@@ -71,7 +71,7 @@ use the submodule to commit changes to our
 1. `cd public-lemur` so git is working in the submodule context.
 2. Create a new branch `git checkout -b my-new-feature-or-fix`.
 3. Change any file in `public-lemur/` and `git commit -m "..."` as usual.
-4. Push the branch to the fork (`git push --set-upstream origin/my-new-feature-or-fix`)
+4. Push the branch to the fork (`git push --set-upstream origin my-new-feature-or-fix`)
 5. Create a PR on the public fork, get it reviewed and merged. NOTE: By default
    Github suggests to make the PR against the Netflix repository as ours was
    forked from there. **You have to manually change the base to `spotify/lemur`** 
