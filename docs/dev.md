@@ -26,15 +26,6 @@ cd public-lemur
 git config remote.origin.pushurl git@github.com:spotify/lemur.git 
 ```
 
-### Start PostgreSQL, Redis and Celery in docker-compose:
-```bash
-# replace <PASSWORD> with the password you want to set on the postgres user
-POSTGRES_PASSWORD=<PASSWORD> docker-compose up
-```
-
-The `POSTGRES_PASSWORD` environment is only needed during the first run of
-`docker-compose`.
-
 ### Create Lemur env file and initialize database
 
 ```bash
@@ -48,6 +39,14 @@ During the setup you will be asked for a password for the `lemur` user. This
 user is the Lemur administration user you can use to login with.
 
 ## Building and Running Lemur
+
+Start the local database and celery services
+```bash
+docker-compose up
+```
+
+Build the spotify-lemur container locally and run it
+
 ```bash
 docker build -t spotify-lemur .
 ./dev-run.sh
