@@ -18,7 +18,6 @@ services:
     command: redis-server --requirepass LemurRedis
     ports:
       - "6379:6379"
-
   celery-beat:
     image: spotify-lemur
     command: "celery -A lemur.common.celery beat"
