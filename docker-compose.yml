@@ -13,12 +13,16 @@ services:
       - POSTGRES_PASSWORD
   redis:
     image: "redis:alpine"
+    # TODO Find a better way to pass the password
+    # to the command section
+    command: redis-server --requirepass LemurRedis
     ports:
       - "6379:6379"
+
   celery-beat:
     image: spotify-lemur
     command: "celery -A lemur.common.celery beat"
-    env_file: 
+    env_file:
     - ".lemur-env"
   celery-worker:
     image: spotify-lemur
