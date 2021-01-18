@@ -110,7 +110,7 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----"""
 
 REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
-REDIS_HOST = os.environ.get("REDIS_HOST", f"redis:{REDIS_PASSWORD}@lemur-redis.services.gew1.spotify.net") 
+REDIS_HOST = os.environ.get("REDIS_HOST", "lemur-redis.services.gew1.spotify.net")
 REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
 REDIS_DB = os.environ.get("REDIS_DB", "0")
 
