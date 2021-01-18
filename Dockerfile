@@ -37,12 +37,13 @@ RUN python setup.py sdist bdist_wheel
 
 
 # NEW STAGE ========================= (multi-stage build to keep image small)
-# TODO(jonaspalm): Switch to Spotify base image when they support Python 3.7
-FROM python:3.7
+FROM gcr.io/spotify-base-images/bionic-python3.7:2020.11-2-SNAPSHOT
 RUN apt-get update && apt-get install -y \
   libldap2-dev \
   libsasl2-dev \
   libssl-dev \
+  gcc \
+  libpq-dev \
   nginx \
   supervisor \
   && rm -rf /var/lib/apt/lists/*
