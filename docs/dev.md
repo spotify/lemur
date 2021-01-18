@@ -7,14 +7,24 @@ Everything below uses Docker to setup the environment so Python and
 the required dependencies for Lemur shouldn't be needed. So no need to create
 a python virtual env either.
 
-### Start PostgreSQL, Redis and Celery in docker-compose:
+### Clone repo and initialize submodule
+
+Clone the repository and initialize the submodule `public-lemur` which points
+to the [public fork of Netflix/lemur in our Github spotify org](https://github.com/spotify/lemur):
 ```bash
-# replace <PASSWORD> with the password you want to set on the postgres user
-POSTGRES_PASSWORD=<PASSWORD> docker-compose up
+git clone git@ghe.spotify.net:wasabi/spotify-lemur.git
+git submodule update --init --recursive
 ```
 
-The `POSTGRES_PASSWORD` environment is only needed during the first run of
-`docker-compose`.
+The submodule is set to using the https URL so that tingle can pull from
+the fork. For development this might be inconvenient as you have to use
+username/password auth for the http URL, so you can set the push-URL to the ssh 
+URL instead:
+
+```bash
+cd public-lemur
+git config remote.origin.pushurl git@github.com:spotify/lemur.git 
+```
 
 ### Create Lemur env file and initialize database
 
@@ -29,6 +39,14 @@ During the setup you will be asked for a password for the `lemur` user. This
 user is the Lemur administration user you can use to login with.
 
 ## Building and Running Lemur
+
+Start the local database and celery services
+```bash
+docker-compose up
+```
+
+Build the spotify-lemur container locally and run it
+
 ```bash
 docker build -t spotify-lemur .
 ./dev-run.sh
@@ -44,6 +62,34 @@ docker run -it --rm --env-file .lemur-env -p 8080:80 spotify-lemur
 You should now be able to access Lemur at http://localhost:8080. Login with
 the user `lemur` and the password you created during the setup phase.
 
+## Making changes in upstream code: working with the submodule  
+
+If you need to make code changes in the original Netflix/lemur code, you can
+use the submodule to commit changes to our 
+[public lemur fork on Github](https://github.com/spotify/lemur):
+
+1. `cd public-lemur` so git is working in the submodule context.
+2. Create a new branch `git checkout -b my-new-feature-or-fix`.
+3. Change any file in `public-lemur/` and `git commit -m "..."` as usual.
+4. Push the branch to the fork (`git push --set-upstream origin my-new-feature-or-fix`)
+5. Create a PR on the public fork, get it reviewed and merged. NOTE: By default
+   Github suggests to make the PR against the Netflix repository as ours was
+   forked from there. **You have to manually change the base to `spotify/lemur`** 
+   otherwise you create the PR in the Netflix repo!
+6. `git checkout master` and `git pull` in `public-lemur`.
+7. `cd ..` to the spotify-lemur directory and up the submodule to the latest 
+   commit on a new branch: 
+   - `git checkout -b up-submodule`
+   - `git add public-lemur`
+   - `git commit -m "Up submodule"`
+
+   This will trigger the build pipeline on your branch and you can create a PR 
+   if the tests succeed. 
+
+For local development you can simply change any file in `public-lemur` and run
+`docker build -t spotify-lemur` and then `./dev-run.sh` to test it. 
+
+
 ## Testing Digicert API Integration
 
 If you want to test the lemur's Digicert Plugin, please add the 
@@ -52,34 +98,3 @@ LastPass's Lemur shared folder. For testing please use the **(testing)** key.
 
 Remember to never commit secrets to GHE. `.lemur-env` is listed in `.gitignore` 
 but still be careful not to check it in.
-
-## Working with patches
-
-If you want to change code in the upstream lemur repository, you can use patches
-instead:
-
-* Clone https://ghe.spotify.net/wasabi/lemur
-* Initialize the submodule with `git submodule update --init --recursive` 
-* Edit the files in the `lemur` subfolder you want to edit.
-* run `git diff --no-prefix > patches/<000-your-patch-name>.patch` to create a
-  new patch file in the `patches` folder.
-
-These patches are [applied by the build-pipeline](https://ghe.spotify.net/wasabi/lemur/blob/master/build-info.yaml#L10-L15) 
-before building the docker image.
-
-## Local development with patches
-
-In the [wasabi/lemur repo](https://ghe.spotify.net/wasabi/lemur), you can run
-```bash
-./dev-build-local.sh
-```
-which will apply all patches, build a local docker image called 
-`lemur-local-dev` and undo the patches again (to leave the files in clean 
-state).
-
-Then in this repository, you can run
-```bash
-./dev-build-from-local-lemur.sh
-```
-which will build the `spotify-lemur` image as usual from the Dockerfile, but 
-use the `lemur-local-dev` image as base-image (instead of the one from the GCR).
