@@ -52,6 +52,10 @@ WORKDIR /app
 COPY --from=public-lemur /app/dist/lemur-0.8.0-py2.py3-none-any.whl .
 RUN pip install lemur-0.8.0-py2.py3-none-any.whl
 
+# install plugins
+COPY spotify-dest-gcp spotify-dest-gcp
+RUN cd spotify-dest-gcp && pip install . && cd ..
+
 # copy static files from builder
 COPY --from=public-lemur /app/lemur/static/dist /opt/lemur/static
 

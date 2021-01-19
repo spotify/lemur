@@ -2,6 +2,12 @@
 set -ex
 
 LEMUR_ENV=".lemur-env"
+LOCALHOST="host.docker.internal"
+# Set LOCALHOST for linux to fix resolve issue
+# (see https://stackoverflow.com/questions/48546124/what-is-linux-equivalent-of-host-docker-internal)
+if [ "$(uname)" == "Linux" ]; then
+    LOCALHOST="172.17.0.1"
+fi
 
 if [[ -f "$LEMUR_ENV" ]]; then
     echo "[dev-setup] $LEMUR_ENV already exists, aborting."
@@ -19,15 +25,7 @@ docker run -it --rm spotify-lemur-dev-setup \
 echo "[dev-setup] starting only postgres container in docker-compose"
 POSTGRES_PASSWORD=lemur docker-compose up -d postgres
 
-
-
 echo "[dev-setup] set local database and redis URLs"
-LOCALHOST="host.docker.internal"
-# Set LOCALHOST for linux to fix resolve issue
-# (see https://stackoverflow.com/questions/48546124/what-is-linux-equivalent-of-host-docker-internal)
-if [ "$(uname)" == "Linux" ]; then
-    LOCALHOST="172.17.0.1"
-fi
 echo SQLALCHEMY_DATABASE_URI="postgresql://lemur:lemur@${LOCALHOST}:5432/lemur" >> .lemur-env
 echo REDIS_HOST=${LOCALHOST} >> .lemur-env
 
@@ -44,4 +42,3 @@ echo "[dev-setup] stopping postgres container"
 docker-compose stop postgres
 
 echo "[dev-setup] done!"
-
