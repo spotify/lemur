@@ -56,6 +56,9 @@ RUN pip install lemur-0.8.0-py2.py3-none-any.whl
 COPY spotify-dest-gcp spotify-dest-gcp
 RUN cd spotify-dest-gcp && pip install . && cd ..
 
+COPY lemur-plugin-ffwd lemur-plugin-ffwd
+RUN cd lemur-plugin-ffwd && pip install . && cd ..
+
 # copy static files from builder
 COPY --from=public-lemur /app/lemur/static/dist /opt/lemur/static
 
