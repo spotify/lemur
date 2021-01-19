@@ -1,23 +1,28 @@
-FROM python:3.7 AS public-lemur
+FROM gcr.io/spotify-base-images/bionic-python3.7:2020.11-2-SNAPSHOT AS public-lemur
 
 RUN apt-get update && apt-get install -y \
   curl \
   make \
   software-properties-common
 
-RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
 
 RUN apt-get update && apt-get install -y \
-  npm \
+  nodejs \
   libldap2-dev \
   libsasl2-dev \
-  libssl-dev
+  libssl-dev \
+  libpq-dev \
+  autoconf \
+  git \
+  gcc
 
 RUN pip install pip==20.3.2
 RUN pip install -U \
   bandit \
   coveralls \
-  setuptools==51.1.1
+  setuptools==51.1.1 \
+  wheel
 
 WORKDIR /app
 COPY public-lemur /app/
