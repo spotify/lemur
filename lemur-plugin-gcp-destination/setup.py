@@ -15,5 +15,5 @@ setup(
         "backoff >= 1.10",
     ],
     packages=find_packages(),
-    test_requires=(current / "requirements-test.txt").read_text().splitlines()
+    test_requires=(current / "requirements-test.txt").read_text().splitlines(),
 )
