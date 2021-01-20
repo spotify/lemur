@@ -65,6 +65,7 @@ PLUGINS = [
     'digicert_issuer',
     'csr_export',
     'ffwd',
+    'gcp_dest',
 ]
 
 LEMUR_DEFAULT_ISSUER_PLUGIN = 'digicert_issuer'
