@@ -28,6 +28,7 @@ POSTGRES_PASSWORD=lemur docker-compose up -d postgres
 echo "[dev-setup] set local database and redis URLs"
 echo SQLALCHEMY_DATABASE_URI="postgresql://lemur:lemur@${LOCALHOST}:5432/lemur" >> .lemur-env
 echo REDIS_HOST=${LOCALHOST} >> .lemur-env
+echo REDIS_PASSWORD="LemurRedis" >> .lemur-env
 
 echo "[dev-setup] initializing database..."
 docker run -it --rm \
