@@ -64,12 +64,13 @@ PLUGINS = [
     'cryptography_issuer',
     'digicert_issuer',
     'csr_export',
+    'ffwd',
 ]
 
 LEMUR_DEFAULT_ISSUER_PLUGIN = 'digicert_issuer'
 LEMUR_DEFAULT_AUTHORITY = 'digicert' 
 
-METRIC_PROVIDERS = []
+METRIC_PROVIDERS = ['ffwd']
 
 ACTIVE_PROVIDERS = ['google']
 
