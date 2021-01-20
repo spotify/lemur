@@ -53,8 +53,8 @@ COPY --from=public-lemur /app/dist/lemur-0.8.0-py2.py3-none-any.whl .
 RUN pip install lemur-0.8.0-py2.py3-none-any.whl
 
 # install plugins
-COPY spotify-dest-gcp spotify-dest-gcp
-RUN cd spotify-dest-gcp && pip install . && cd ..
+COPY lemur-plugin-gcp-destination lemur-plugin-gcp-destination
+RUN cd lemur-plugin-gcp-destination && pip install . && cd ..
 
 COPY lemur-plugin-ffwd lemur-plugin-ffwd
 RUN cd lemur-plugin-ffwd && pip install . && cd ..
