@@ -1,6 +1,6 @@
 import pathlib
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 current = pathlib.Path(__file__).resolve().parent
 
@@ -14,5 +14,6 @@ setup(
         "google-oauth >= 1",
         "backoff >= 1.10",
     ],
+    packages=find_packages(),
     test_requires=(current / "requirements-test.txt").read_text().splitlines(),
 )
