@@ -1,23 +1,28 @@
-FROM python:3.7 AS public-lemur
+FROM gcr.io/spotify-base-images/bionic-python3.7:2020.11-1@sha256:4767165cdd16cf6d763c8b2b3d1c83830ff0f5d10aecd4f8a619fbc2fcf9c235 AS public-lemur
 
 RUN apt-get update && apt-get install -y \
   curl \
   make \
   software-properties-common
 
-RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
 
 RUN apt-get update && apt-get install -y \
-  npm \
+  nodejs \
   libldap2-dev \
   libsasl2-dev \
-  libssl-dev
+  libssl-dev \
+  libpq-dev \
+  autoconf \
+  git \
+  gcc
 
 RUN pip install pip==20.3.2
 RUN pip install -U \
   bandit \
   coveralls \
-  setuptools==51.1.1
+  setuptools==51.1.1 \
+  wheel
 
 WORKDIR /app
 COPY public-lemur /app/
@@ -37,12 +42,13 @@ RUN python setup.py sdist bdist_wheel
 
 
 # NEW STAGE ========================= (multi-stage build to keep image small)
-# TODO(jonaspalm): Switch to Spotify base image when they support Python 3.7
-FROM python:3.7
+FROM gcr.io/spotify-base-images/bionic-python3.7:2020.11-1@sha256:4767165cdd16cf6d763c8b2b3d1c83830ff0f5d10aecd4f8a619fbc2fcf9c235
 RUN apt-get update && apt-get install -y \
   libldap2-dev \
   libsasl2-dev \
   libssl-dev \
+  gcc \
+  libpq-dev \
   nginx \
   supervisor \
   && rm -rf /var/lib/apt/lists/*
