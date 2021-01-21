@@ -42,7 +42,7 @@ RUN python setup.py sdist bdist_wheel
 
 
 # NEW STAGE ========================= (multi-stage build to keep image small)
-FROM gcr.io/spotify-base-images/bionic-python3.7:2020.11-1@sha256:4767165cdd16cf6d763c8b2b3d1c83830ff0f5d10aecd4f8a619fbc2fcf9c235 AS public-lemur
+FROM gcr.io/spotify-base-images/bionic-python3.7:2020.11-1@sha256:4767165cdd16cf6d763c8b2b3d1c83830ff0f5d10aecd4f8a619fbc2fcf9c235
 RUN apt-get update && apt-get install -y \
   libldap2-dev \
   libsasl2-dev \
