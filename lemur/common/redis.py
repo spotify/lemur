@@ -31,7 +31,7 @@ class RedisHandler:
         try:
             red = redis.StrictRedis(
                 host=self.host,
-                port=6379,
+                port=self.port,
                 db=self.db,
                 password=self.password,
                 encoding="utf-8",
