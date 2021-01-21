@@ -4,7 +4,8 @@ import pathlib
 import pytest
 
 
-def test_get_load_balancers(get_gcp_client):
+@pytest.mark.parametrize("tcp_ssl_proxy", [True, False])
+def test_get_load_balancers(get_gcp_client, tcp_ssl_proxy):
     """Test that the client can get a load balancer.
 
     Mocks the requests to Google with a preset response and compare the result
@@ -37,7 +38,8 @@ def test_get_load_balancers(get_gcp_client):
     assert client_response == json.loads(load_balancer_response)
 
 
-def test_create_cert_when_exists(get_gcp_client):
+@pytest.mark.parametrize("tcp_ssl_proxy", [True, False])
+def test_create_cert_when_exists(get_gcp_client, tcp_ssl_proxy):
     """Test that the client can return the path to an existing cert
 
     Mocks the requests to Google with a preset response and compare the result.
@@ -56,6 +58,7 @@ def test_create_cert_when_exists(get_gcp_client):
     client = get_gcp_client(
         gcp_project="xpn-cert-management",
         target_lb="https-python-test-lb",
+        tcp_ssl_proxy=tcp_ssl_proxy,
         responses=[({"status": "200"}, cert_response)],
     )
 
@@ -69,7 +72,8 @@ def test_create_cert_when_exists(get_gcp_client):
     )
 
 
-def test_create_certificate(get_gcp_client):
+@pytest.mark.parametrize("tcp_ssl_proxy", [True, False])
+def test_create_certificate(get_gcp_client, tcp_ssl_proxy):
     """Test that the client can create a new certificate
 
     Mocks the requests to Google with a preset response and compare the result.
@@ -106,7 +110,8 @@ def test_create_certificate(get_gcp_client):
     )
 
 
-def test_update_lb_ssl_cert(get_gcp_client):
+@pytest.mark.parametrize("tcp_ssl_proxy", [True, False])
+def test_update_lb_ssl_cert(get_gcp_client, tcp_ssl_proxy):
     """Test that the load balancer can be updated with a new certificate.
 
     This is not a great test as we do not handle the response. This test does
@@ -117,6 +122,7 @@ def test_update_lb_ssl_cert(get_gcp_client):
     client = get_gcp_client(
         gcp_project="xpn-cert-management",
         target_lb="https-test-lb-target-proxy",
+        tcp_ssl_proxy=tcp_ssl_proxy,
         responses=[
             (
                 {"status": "200"},
@@ -131,7 +137,8 @@ def test_update_lb_ssl_cert(get_gcp_client):
     )
 
 
-def test_update_lb_error(get_gcp_client):
+@pytest.mark.parametrize("tcp_ssl_proxy", [True, False])
+def test_update_lb_error(get_gcp_client, tcp_ssl_proxy):
     """Test that the load balancer update raises ValueError with to many certs.
 
     Mocks the request to GCP with preset responses.
@@ -141,6 +148,7 @@ def test_update_lb_error(get_gcp_client):
     client = get_gcp_client(
         gcp_project="xpn-cert-management",
         target_lb="https-test-lb-target-proxy",
+        tcp_ssl_proxy=tcp_ssl_proxy,
     )
 
     with pytest.raises(ValueError):

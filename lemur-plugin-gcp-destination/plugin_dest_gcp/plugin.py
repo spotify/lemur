@@ -13,9 +13,22 @@ class GcpDestination(DestinationPlugin):
     author_url = "https://github.com/yourname/lemur_pluginname"
 
     options = [
-        {"name": "gcp-project", "type": "str", "required": True,},
-        {"name": "target-proxy-name", "type": "str", "required": True,},
-        {"name": "tcp-ssl-proxy", "type": "bool", "required": False, "default": False,},
+        {
+            "name": "gcp-project",
+            "type": "str",
+            "required": True,
+        },
+        {
+            "name": "target-proxy-name",
+            "type": "str",
+            "required": True,
+        },
+        {
+            "name": "tcp-ssl-proxy",
+            "type": "bool",
+            "required": False,
+            "default": False,
+        },
     ]
     additional_options = []
 

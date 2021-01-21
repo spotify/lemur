@@ -10,6 +10,7 @@ def get_gcp_client():
     def inner(
         gcp_project="xpn-cert-management",
         target_lb="https-python-test-lb",
+        tcp_ssl_proxy=False,
         responses=None,
     ):
         # HttpMock/HttpMockSequence allows us to set custom responses
@@ -34,6 +35,7 @@ def get_gcp_client():
         return plugin_dest_gcp.gcp.Gcp(
             gcp_project=gcp_project,
             target_lb=target_lb,
+            tcp_ssl_proxy=tcp_ssl_proxy,
             http=http,
         )
 
