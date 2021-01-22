@@ -9,11 +9,14 @@ from googleapiclient import discovery
 
 
 class Gcp:
-    def __init__(self, gcp_project, target_lb, logger=None, http=None):
+    def __init__(
+        self, gcp_project, target_lb, tcp_ssl_proxy=False, logger=None, http=None
+    ):
         """Create the GCP class"""
 
         self.gcp_project = gcp_project
         self.target_lb = target_lb
+        self.tcp_ssl_proxy = tcp_ssl_proxy
         self.logger = logger if logger else logging.getLogger(__name__)
 
         # Disable cache_discovery to prevent file_cache is unavailable when
@@ -32,6 +35,11 @@ class Gcp:
 
         # Create the google client with the key word arguments from above
         self.client = discovery.build("compute", "v1", **args)
+        self.lb_client = (
+            self.client.targetSslProxies()
+            if tcp_ssl_proxy
+            else self.client.targetHttpsProxies()
+        )
 
     @staticmethod
     def create_cert_name(name):
@@ -48,6 +56,18 @@ class Gcp:
             name = f"{name[:max_length-8]}-{hashlib.sha256(name.encode('UTF-8')).hexdigest()[:7]}"
 
         return name
+
+    def get_target_kwargs(self):
+        """Return LB type specific kwargs used to call methods on the
+        load balancer client.
+
+        Helper function because arguments differ between the
+        targetSslProxy and targetHttpsProxy clients."""
+        arg = "targetSslProxy" if self.tcp_ssl_proxy else "targetHttpsProxy"
+        return {
+            "project": self.gcp_project,
+            arg: self.target_lb,
+        }
 
     def create_gcp_certificate(self, name, cert, private_key, cert_chain):
         name = self.create_cert_name(name)
@@ -88,9 +108,7 @@ class Gcp:
 
     def get_load_balancer(self):
         # returns a load balancer from gcp
-        request = self.client.targetHttpsProxies().get(
-            project=self.gcp_project, targetHttpsProxy=self.target_lb
-        )
+        request = self.lb_client.get(**self.get_target_kwargs())
         response = request.execute()
         return response
 
@@ -105,8 +123,8 @@ class Gcp:
             )
 
         self.logger.debug(f"Updating GFE {self.target_lb}")
-        request = self.client.targetHttpsProxies().setSslCertificates(
-            project=self.gcp_project, targetHttpsProxy=self.target_lb, body=request_body
+        request = self.lb_client.setSslCertificates(
+            **self.get_target_kwargs(), body=request_body
         )
         return request.execute()
 
