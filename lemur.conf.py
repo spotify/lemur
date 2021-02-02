@@ -129,4 +129,11 @@ CELERYBEAT_SCHEDULE = {
         },
         'schedule': crontab(minute="*/5"), # every 5 minutes
     },
+    'certificate_reissue': {
+        'task': 'lemur.common.celery.certificate_reissue',
+        'options': {
+            'expires': 180
+        },
+        'schedule': crontab(minute="*/60"), # every 60 minutes
+    },
 }
