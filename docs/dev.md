@@ -40,22 +40,27 @@ user is the Lemur administration user you can use to login with.
 
 ## Building and Running Lemur
 
+Build the spotify-lemur container locally
+
+```bash
+docker build -t spotify-lemur .
+```
+
 Start the local database and celery services
+
 ```bash
 docker-compose up
 ```
 
-Build the spotify-lemur container locally and run it
+Run the spotify-lemur container
 
 ```bash
-docker build -t spotify-lemur .
 ./dev-run.sh
 ```
 
-or 
+or
 
 ```bash
-docker build -t spotify-lemur .
 docker run -it --rm --env-file .lemur-env -p 8080:80 spotify-lemur
 ```
 
