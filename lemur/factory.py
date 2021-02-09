@@ -18,6 +18,8 @@ import socket
 from logging import Formatter, StreamHandler
 from logging.handlers import RotatingFileHandler
 
+from log import JsonFormatter
+
 from flask import Flask
 from flask_replicated import FlaskReplicated
 import logmatic
@@ -184,7 +186,11 @@ def configure_logging(app):
 
     if app.config.get("LOG_JSON", False):
         handler.setFormatter(
-            logmatic.JsonFormatter(extra={"hostname": socket.gethostname()})
+            JsonFormatter(
+                fields=["levelname", "name"],
+                levelname="severity",
+                name="log",
+            )
         )
 
     handler.setLevel(app.config.get("LOG_LEVEL", "DEBUG"))
