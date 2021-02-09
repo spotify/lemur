@@ -16,9 +16,8 @@ import pkg_resources
 import socket
 
 from logging import Formatter, StreamHandler
+from logging.config import dictConfig
 from logging.handlers import RotatingFileHandler
-
-from log import JsonFormatter
 
 from flask import Flask
 from flask_replicated import FlaskReplicated
@@ -174,6 +173,12 @@ def configure_logging(app):
 
     :param app:
     """
+
+    log_config_dict = app.config.get("LOG_CONFIG_DICT") 
+    if log_config_dict:
+        dictConfig(log_config_dict)
+        return
+
     handler = RotatingFileHandler(
         app.config.get("LOG_FILE", "lemur.log"), maxBytes=10000000, backupCount=100
     )
@@ -186,11 +191,7 @@ def configure_logging(app):
 
     if app.config.get("LOG_JSON", False):
         handler.setFormatter(
-            JsonFormatter(
-                fields=["levelname", "name"],
-                levelname="severity",
-                name="log",
-            )
+            logmatic.JsonFormatter(extra={"hostname": socket.gethostname()})
         )
 
     handler.setLevel(app.config.get("LOG_LEVEL", "DEBUG"))
