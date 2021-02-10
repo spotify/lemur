@@ -215,3 +215,6 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute="47"), # once per hour
     },
 }
+
+# make celery not remove our carefully drafted log handlers
+worker_hijack_root_logger: False
