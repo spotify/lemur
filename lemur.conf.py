@@ -1,12 +1,45 @@
+import base64
+import datetime
+import json
+import logging
 import os
 import secrets
 import string
-import base64
+import sys
 from celery.task.schedules import crontab
 
 
 CORS = os.environ.get("CORS") == "True"
 debug = True
+
+
+def JsonFormatter(fields=None, **kwargs):
+    class _cls(logging.Formatter):
+        def __init__(self):
+            super().__init__()
+
+        def format(self, record):
+            if fields:
+                data = {
+                    kwargs.get(k, k): v
+                    for k, v in record.__dict__.items()
+                    if k in fields
+                }
+            else:
+                data = {}
+
+            data["timestamp"] = datetime.datetime.now().isoformat()
+            data["message"] = record.getMessage()
+
+            if record.exc_info:
+                data["exc_info"] = self.formatException(record.exc_info)
+
+            if record.stack_info:
+                data["stack_info"] = self.formatStack(record.stack_info)
+
+            return json.dumps(data)
+
+    return _cls
 
 
 def get_random_secret(length):
@@ -80,6 +113,31 @@ GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
 LOG_LEVEL = str(os.environ.get('LOG_LEVEL','DEBUG'))
 LOG_FILE = str(os.environ.get('LOG_FILE','lemur.log'))
+LOG_CONFIG_DICT = dict(
+    version=1,
+    root={"level": "INFO", "handlers": ["console"]},
+    handlers={
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+            "stream": sys.stdout,
+        },
+    },
+    formatters={
+        "generic": {
+            "format": "%(asctime)s [%(process)d] [%(levelname)s] %(name)s: %(message)s",
+            "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+            "class": "logging.Formatter",
+        },
+        "json": {
+            "()": JsonFormatter(
+                fields=["levelname", "name"],
+                levelname="severity",
+                name="log",
+            )
+        },
+    },
+)
 
 SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','postgresql://lemur:lemur@host.docker.internal:5432/lemur')
 
