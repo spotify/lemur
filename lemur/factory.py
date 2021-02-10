@@ -174,7 +174,7 @@ def configure_logging(app):
     :param app:
     """
 
-    log_config_dict = app.config.get("LOG_CONFIG_DICT") 
+    log_config_dict = app.config.get("LOG_CONFIG_DICT")
     if log_config_dict:
         dictConfig(log_config_dict)
         return
