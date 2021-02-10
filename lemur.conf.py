@@ -14,12 +14,28 @@ debug = True
 
 
 def JsonFormatter(fields=None, **kwargs):
+    """Returns a loggin Formatter class to produce json logs that are compatible 
+    with GCP Stackdriver. The log output will only contain the fields 
+    'timestamp', 'message' as well as `exec_info` and `stack_info` if present,
+    and additionaly fields specified by the `fields` parameter.
+    These additional fields can be re-named by passing in the field name and the 
+    new name as keyword arguments.
+
+    Args:
+        fields (Optional[List[str]]): Additional fields that should show up in 
+        the log output. Defaults to None.
+
+    Returns:
+        class: logging formatter class 
+    """
     class _cls(logging.Formatter):
         def __init__(self):
             super().__init__()
 
         def format(self, record):
             if fields:
+                # filter for fields and rename if they are specified as keyword
+                # arguments
                 data = {
                     kwargs.get(k, k): v
                     for k, v in record.__dict__.items()
@@ -111,11 +127,9 @@ ACTIVE_PROVIDERS = ['google']
 GOOGLE_CLIENT_ID = str(os.environ.get('GOOGLE_CLIENT_ID','421791425557-lfk56lqi3rnhi4n2fr2rakmbv4lbc93l.apps.googleusercontent.com'))
 GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
-LOG_LEVEL = str(os.environ.get('LOG_LEVEL','DEBUG'))
-LOG_FILE = str(os.environ.get('LOG_FILE','lemur.log'))
 LOG_CONFIG_DICT = dict(
     version=1,
-    root={"level": "INFO", "handlers": ["console"]},
+    root={"level": "DEBUG", "handlers": ["console"]},
     handlers={
         "console": {
             "class": "logging.StreamHandler",
