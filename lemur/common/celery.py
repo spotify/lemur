@@ -47,6 +47,8 @@ def make_celery(app):
         broker=app.config.get("CELERY_BROKER_URL"),
     )
     celery.conf.update(app.config)
+    if app.config.get("CELERYD_HIJACK_ROOT_LOGGER", True) is False:
+        celery.conf.CELERYD_HIJACK_ROOT_LOGGER = False
     TaskBase = celery.Task
 
     class ContextTask(TaskBase):
