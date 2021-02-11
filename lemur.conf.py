@@ -198,6 +198,7 @@ CELERY_RESULT_BACKEND = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{R
 CELERY_BROKER_URL = CELERY_RESULT_BACKEND
 CELERY_IMPORTS = "lemur.common.celery"
 CELERY_TIMEZONE = "UTC"
+CELERYD_HIJACK_ROOT_LOGGER = False if LOG_CONFIG_DICT else True
 
 CELERYBEAT_SCHEDULE = {
     'fetch_all_pending_certs': {
@@ -215,6 +216,3 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute="47"), # once per hour
     },
 }
-
-# make celery not remove our carefully drafted log handlers
-worker_hijack_root_logger: False
