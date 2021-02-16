@@ -135,17 +135,45 @@ class Gcp:
         # - We should never delete certificate
         # - You need to upload your certificate first before you can add it to a load balancer
         # - You can only update certificates by getting the current list of certificates and appending
-        cert_name = self.create_gcp_certificate(name, cert, private_key, cert_chain)
+        try:
+            self.logger.info(f"Creating GCP certficate resource {name}")
+            cert_name = self.create_gcp_certificate(name, cert, private_key, cert_chain)
+        except Exception as e:
+            self.logger.error(
+                "Failed to create GCP certificate resource.",
+                extra={"name": name},
+                exc_info=e,
+            )
+            return
 
-        lb = self.get_load_balancer()
-        ssl_certificates = lb.get("sslCertificates", [])
+        try:
+            self.logger.debug("Retrieving load balancer certificate list.")
+            lb = self.get_load_balancer()
+            ssl_certificates = lb.get("sslCertificates", [])
+            self.logger.debug(
+                "Successfully retrieved load balancer certificate list.",
+                extra={"ssl_certificates": ssl_certificates},
+            )
+        except Exception as e:
+            self.logger.error(
+                "Failed to get certificate list from load balancer.", exc_info=e
+            )
+            return
 
         if cert_name not in ssl_certificates:
             # insert the certificate into the list of ssl_certificates
             new_certificate_list = [cert_name] + ssl_certificates
 
             self.logger.info(f"Attaching cert {name} to {self.target_lb}")
-            self.update_load_balancer_ssl_certificates(new_certificate_list)
+            try:
+                self.update_load_balancer_ssl_certificates(new_certificate_list)
+            except Exception as e:
+                self.logger.error(
+                    "Failed to attach certificate to load balancer.",
+                    extra={"new_certificate_list": new_certificate_list},
+                    exc_info=e,
+                )
+                return
         else:
             self.logger.info(
                 f"Target GFE {self.target_lb} already has cert {cert_name} attached, skipping."
