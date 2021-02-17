@@ -141,7 +141,7 @@ class Gcp:
         except Exception as e:
             self.logger.error(
                 "Failed to create GCP certificate resource.",
-                extra={"name": name},
+                extra={"certificate_name": name},
                 exc_info=e,
             )
             return

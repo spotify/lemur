@@ -41,8 +41,5 @@ class GcpDestination(DestinationPlugin):
             self.get_option("tcp-ssl-proxy", options),
             logger=current_app.logger,
         )
-        print(
-            f"Current app logger: {current_app.logger.__dict__}, parent: {current_app.logger.parent.__dict__}"
-        )
 
         gcp.add_certificate(name, body, private_key, cert_chain)
