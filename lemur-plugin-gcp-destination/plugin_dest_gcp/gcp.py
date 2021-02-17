@@ -1,10 +1,10 @@
 import hashlib
 import logging
-import pathlib
 
 import backoff
 import google.auth
 import googleapiclient.errors
+from flask import current_app  # pylint: disable=import-error
 from googleapiclient import discovery
 
 
