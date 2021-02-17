@@ -4,7 +4,6 @@ import logging
 import backoff
 import google.auth
 import googleapiclient.errors
-from flask import current_app  # pylint: disable=import-error
 from googleapiclient import discovery
 
 
@@ -18,6 +17,7 @@ class Gcp:
         self.target_lb = target_lb
         self.tcp_ssl_proxy = tcp_ssl_proxy
         self.logger = logger if logger else logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
 
         # Disable cache_discovery to prevent file_cache is unavailable when
         # using oauth2client >= 4.0.0 or google-auth error.
