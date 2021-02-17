@@ -17,7 +17,7 @@ spec:
       - name: lemur
         image: $DEPLOYMENT_IMAGE
         command: ["celery"]
-        args: ["-A", "lemur.common.celery", "worker", "--concurrency", "1", "-E"]
+        args: ["-A", "lemur.common.celery", "worker", "-l", "DEBUG", "--concurrency", "1", "-E"]
         env:
         - name: LEMUR_ENCRYPTION_KEYS
           valueFrom:
