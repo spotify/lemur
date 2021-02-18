@@ -49,7 +49,7 @@ class Gcp:
 
     def send_metrics(self, *args, **kwargs):
         if self.metrics:
-            self.metrics(*args, **kwargs)
+            self.metrics.send(*args, **kwargs)
 
     @staticmethod
     def create_cert_name(name):
