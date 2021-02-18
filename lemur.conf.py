@@ -129,7 +129,10 @@ GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
 LOG_CONFIG_DICT = dict(
     version=1,
-    root={"level": "DEBUG", "handlers": ["console"]},
+    root={
+        "level": "DEBUG",
+        "handlers": ["console"]
+    },
     loggers={
         "gunicorn.access": {"propagate": False},
         "gunicorn.error": {"propagate": True},

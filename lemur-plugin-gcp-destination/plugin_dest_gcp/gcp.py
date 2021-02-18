@@ -9,7 +9,13 @@ from googleapiclient import discovery
 
 class Gcp:
     def __init__(
-        self, gcp_project, target_lb, tcp_ssl_proxy=False, logger=None, http=None
+        self,
+        gcp_project,
+        target_lb,
+        tcp_ssl_proxy=False,
+        logger=None,
+        http=None,
+        metrics=None,
     ):
         """Create the GCP class"""
 
@@ -17,7 +23,7 @@ class Gcp:
         self.target_lb = target_lb
         self.tcp_ssl_proxy = tcp_ssl_proxy
         self.logger = logger if logger else logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
+        self.metrics = metrics
 
         # Disable cache_discovery to prevent file_cache is unavailable when
         # using oauth2client >= 4.0.0 or google-auth error.
@@ -40,6 +46,10 @@ class Gcp:
             if tcp_ssl_proxy
             else self.client.targetHttpsProxies()
         )
+
+    def send_metrics(self, *args, **kwargs):
+        if self.metrics:
+            self.send_metrics(*args, **kwargs)
 
     @staticmethod
     def create_cert_name(name):
@@ -114,12 +124,12 @@ class Gcp:
 
     @backoff.on_exception(backoff.expo, googleapiclient.errors.HttpError, max_time=30)
     def update_load_balancer_ssl_certificates(self, certificate_list):
-        # must check that number of certificates are <= 16, if not throw something
+        # must check that number of certificates are <= 15, if not throw something
         request_body = {"sslCertificates": certificate_list}
 
-        if len(request_body["sslCertificates"]) > 16:
+        if len(request_body["sslCertificates"]) >= 15:
             raise ValueError(
-                f"Too many certificates {len(request_body['sslCertificates'])}. Max number is 16"
+                f"Too many certificates: {len(request_body['sslCertificates'])}. Max number is 15"
             )
 
         self.logger.debug(f"Updating GFE {self.target_lb}")
@@ -138,11 +148,33 @@ class Gcp:
         try:
             self.logger.info(f"Creating GCP certficate resource {name}")
             cert_name = self.create_gcp_certificate(name, cert, private_key, cert_chain)
+
+            self.send_metrics(
+                "gcp_create_certificate",
+                "counter",
+                1,
+                metric_tags={
+                    "name": name,
+                    "project": self.gcp_project,
+                    "status": "success",
+                },
+            )
+
         except Exception as e:
             self.logger.error(
                 "Failed to create GCP certificate resource.",
                 extra={"certificate_name": name},
                 exc_info=e,
+            )
+            self.send_metrics(
+                "gcp_create_certificate",
+                "counter",
+                1,
+                metric_tags={
+                    "name": name,
+                    "project": self.gcp_project,
+                    "status": "failure",
+                },
             )
             return
 
@@ -167,11 +199,34 @@ class Gcp:
             self.logger.info(f"Attaching cert {name} to {self.target_lb}")
             try:
                 self.update_load_balancer_ssl_certificates(new_certificate_list)
+                self.send_metrics(
+                    "gcp_attach_certificate",
+                    "counter",
+                    1,
+                    metric_tags={
+                        "name": name,
+                        "project": self.gcp_project,
+                        "target_load_balancer": self.target_lb,
+                        "new_number_of_certificates": len(new_certificate_list),
+                        "status": "success",
+                    },
+                )
             except Exception as e:
                 self.logger.error(
                     "Failed to attach certificate to load balancer.",
                     extra={"new_certificate_list": new_certificate_list},
                     exc_info=e,
+                )
+                self.send_metrics(
+                    "gcp_attach_certificate",
+                    "counter",
+                    1,
+                    metric_tags={
+                        "name": name,
+                        "project": self.gcp_project,
+                        "target_load_balancer": self.target_lb,
+                        "status": "failure",
+                    },
                 )
                 return
         else:

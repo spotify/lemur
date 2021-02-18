@@ -1,4 +1,4 @@
-from flask import current_app  # pylint: disable=import-error
+from lemur.extensions import metrics  # pylint: disable=import-error
 from lemur.plugins.bases import DestinationPlugin  # pylint: disable=import-error
 
 from .gcp import Gcp
@@ -39,7 +39,7 @@ class GcpDestination(DestinationPlugin):
             self.get_option("gcp-project", options),
             self.get_option("target-proxy-name", options),
             self.get_option("tcp-ssl-proxy", options),
-            logger=current_app.logger,
+            metrics=metrics,
         )
 
         gcp.add_certificate(name, body, private_key, cert_chain)
