@@ -1,14 +1,6 @@
-FROM gcr.io/spotify-base-images/bionic-python3.7:2020.11-1@sha256:4767165cdd16cf6d763c8b2b3d1c83830ff0f5d10aecd4f8a619fbc2fcf9c235 AS public-lemur
+FROM gcr.io/xpn-cert-management/spotify-lemur-frontend@sha256:2d548d4f50ddafd81db9f44026e7183d1f73e84e34c86a5af128aa828adec68d AS public-lemur
 
 RUN apt-get update && apt-get install -y \
-  curl \
-  make \
-  software-properties-common
-
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
-
-RUN apt-get update && apt-get install -y \
-  nodejs \
   libldap2-dev \
   libsasl2-dev \
   libssl-dev \
@@ -31,14 +23,7 @@ RUN pip install "file://`pwd`#egg=lemur[dev]"
 RUN pip install "file://`pwd`#egg=lemur[tests]"
 
 
-# build frontend
-# need to delete some left-overs from using submodules
-WORKDIR /app
-RUN rm /app/.git
-
-# doesn't look like bower likes being root so we need --unsafe-perm here
-RUN npm install --unsafe-perm
-RUN python setup.py sdist bdist_wheel
+RUN python setup.py bdist_wheel
 
 
 # NEW STAGE ========================= (multi-stage build to keep image small)
