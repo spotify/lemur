@@ -5,6 +5,7 @@ template:
   dockerImage:
     name: 'spotify-lemur'
     gcpProject: 'xpn-cert-management'
+    versionWithEpoch: true
     tugboat:
       path: .
 
