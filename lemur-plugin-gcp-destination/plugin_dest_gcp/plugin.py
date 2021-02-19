@@ -32,12 +32,6 @@ class GcpDestination(DestinationPlugin):
     ]
     additional_options = []
 
-    def upload(
-        self, name, body, private_key, cert_chain, options, **kwargs
-    ):  # pylint: disable=unused-argument
-        gcp = self.get_gcp(options)
-        gcp.add_certificate(name, body, private_key, cert_chain)
-
     def get_gcp(self, options):
         gcp = Gcp(
             self.get_option("gcp-project", options),
@@ -46,6 +40,24 @@ class GcpDestination(DestinationPlugin):
             metrics=metrics,
         )
         return gcp
+
+    def upload(
+        self, name, body, private_key, cert_chain, options, **kwargs
+    ):  # pylint: disable=unused-argument
+        gcp = self.get_gcp(options)
+        res = gcp.add_certificate(name, body, private_key, cert_chain)
+
+        metrics.send(
+            "gcp_upload_certificate",
+            "counter",
+            1,
+            metric_tags={
+                "name": name,
+                "project": gcp.gcp_project,
+                "target-proxy-name": gcp.target_lb,
+                "status": "success" if res else "failure",
+            },
+        )
 
     def verify(self, cert_name, options):
         gcp = self.get_gcp(options)
