@@ -216,13 +216,13 @@ CELERYBEAT_SCHEDULE = {
         'options': {
             'expires': 180
         },
-        'schedule': crontab(minute="*/5"), # every 5 minutes
+        'schedule': crontab(minute="20"), # every 5 minutes
     },
     'certificate_destination_check': {
         'task': 'lemur.common.celery.certificate_destination_check',
         'options': {
             'expires': 180
         },
-        'schedule': crontab(minute="17"), # every 5 minutes
+        'schedule': crontab(minute="*/5"), # every 5 minutes
     },
 }
