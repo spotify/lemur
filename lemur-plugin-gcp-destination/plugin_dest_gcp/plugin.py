@@ -35,11 +35,19 @@ class GcpDestination(DestinationPlugin):
     def upload(
         self, name, body, private_key, cert_chain, options, **kwargs
     ):  # pylint: disable=unused-argument
+        gcp = self.get_gcp(options)
+        gcp.add_certificate(name, body, private_key, cert_chain)
+
+    def get_gcp(self, options):
         gcp = Gcp(
             self.get_option("gcp-project", options),
             self.get_option("target-proxy-name", options),
             self.get_option("tcp-ssl-proxy", options),
             metrics=metrics,
         )
+        return gcp
 
-        gcp.add_certificate(name, body, private_key, cert_chain)
+    def verify(self, cert_name, options):
+        gcp = self.get_gcp(options)
+        gcp_cert_name = Gcp.create_cert_name(cert_name)
+        return gcp_cert_name in gcp.get_load_balancer().get("sslCertificates", [])
