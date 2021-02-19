@@ -223,6 +223,6 @@ CELERYBEAT_SCHEDULE = {
         'options': {
             'expires': 180
         },
-        'schedule': crontab(minute="*/5"), # every 5 minutes
+        'schedule': crontab(minute="17"), # every 5 minutes
     },
 }
