@@ -10,6 +10,7 @@ command: celery -A lemur.common.celery worker --loglevel=info -l DEBUG -B
 import copy
 import sys
 import time
+import logging
 from celery import Celery
 from celery.app.task import Context
 from celery.exceptions import SoftTimeLimitExceeded
@@ -18,7 +19,7 @@ from datetime import datetime, timezone, timedelta
 from flask import current_app
 
 from lemur.authorities.service import get as get_authority
-from lemur.certificates import cli as cli_certificate
+from lemur.certificates import cli as cli_certificate, service as certificate_service
 from lemur.common.redis import RedisHandler
 from lemur.destinations import service as destinations_service
 from lemur.dns_providers import cli as cli_dns_providers
@@ -1051,5 +1052,65 @@ def deactivate_entrust_test_certificates():
         metrics.send("celery.timeout", "counter", 1, metric_tags={"function": function})
         return
 
+    metrics.send(f"{function}.success", "counter", 1)
+    return log_data
+
+
+
+@celery.task(soft_time_limit=3600)
+def certificate_destination_check():
+    """
+    This celery task checks all destinations if the certificate
+    has been uploaded, otherwise it tries to upload it.
+    :return:
+    """
+    function = f"{__name__}.{sys._getframe().f_code.co_name}"
+    logger = logging.getLogger(function)
+    task_id = None
+    if celery.current_task:
+        task_id = celery.current_task.request.id
+
+    log_data = {
+        "function": function,
+        "message": "checking certificate destinations",
+        "task_id": task_id,
+    }
+
+    if task_id and is_task_active(function, task_id, None):
+        log_data["message"] = "Skipping task: Task is already active"
+        logger.debug(log_data)
+        return
+
+    logger.debug(log_data)
+    try:
+        certs = certificate_service.get_all_valid_certs([])
+        for cert in certs:
+            if cert.replaced:
+                continue
+
+            logger.debug(f"verifying certificate {cert.name}")
+
+            for dest in cert.destinations:
+                try:
+                    uploaded = dest.plugin.verify(cert.name, dest.options)
+                    if not uploaded:
+                        logger.info(f"uploading certificate {cert.name} to destination")
+                        dest.plugin.upload(cert.name,
+                                           cert.body,
+                                           cert.private_key,
+                                           cert.chain,
+                                           dest.options)
+                except NotImplementedError as e:
+                    logging.warning(f"method not implemented for plugin {dest.plugin.slug}: {str(e)}")
+
+    except SoftTimeLimitExceeded:
+        log_data["message"] = "Certificate destination check: Time limit exceeded."
+        logger.error(log_data)
+        sentry.captureException()
+        metrics.send("celery.timeout", "counter", 1, metric_tags={"function": function})
+        return
+
+    log_data["message"] = "destination check completed"
+    logger.debug(log_data)
     metrics.send(f"{function}.success", "counter", 1)
     return log_data
