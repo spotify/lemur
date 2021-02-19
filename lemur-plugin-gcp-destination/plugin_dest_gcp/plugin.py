@@ -48,16 +48,16 @@ class GcpDestination(DestinationPlugin):
         res = gcp.add_certificate(name, body, private_key, cert_chain)
 
         metrics.send(
-                "gcp_upload_certificate",
-                "counter",
-                1,
-                metric_tags={
-                    "name": name,
-                    "project": gcp.gcp_project,
-                    "target-proxy-name": gcp.target_lb,
-                    "status": "success" if res else "failure",
-                },
-            )
+            "gcp_upload_certificate",
+            "counter",
+            1,
+            metric_tags={
+                "name": name,
+                "project": gcp.gcp_project,
+                "target-proxy-name": gcp.target_lb,
+                "status": "success" if res else "failure",
+            },
+        )
 
     def verify(self, cert_name, options):
         gcp = self.get_gcp(options)
