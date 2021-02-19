@@ -19,4 +19,4 @@ class FFWDMetricPlugin(MetricPlugin):
         current_app.logger.debug(
             f"ffwd-plugin: sending metrics {metric_name} {metric_type} {metric_value} {metric_tags}"
         )
-        self.mr.emit(metric_name, metric_value, tags=metric_tags)
+        self.mr.emit(metric_name, metric_value, metric_tags)
