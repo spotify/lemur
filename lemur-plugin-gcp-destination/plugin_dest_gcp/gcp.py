@@ -176,7 +176,7 @@ class Gcp:
                     "status": "failure",
                 },
             )
-            return
+            return False
 
         try:
             self.logger.debug("Retrieving load balancer certificate list.")
@@ -190,7 +190,7 @@ class Gcp:
             self.logger.error(
                 "Failed to get certificate list from load balancer.", exc_info=e
             )
-            return
+            return False
 
         if cert_name not in ssl_certificates:
             # insert the certificate into the list of ssl_certificates
@@ -211,6 +211,7 @@ class Gcp:
                         "status": "success",
                     },
                 )
+                return True
             except Exception as e:
                 self.logger.error(
                     "Failed to attach certificate to load balancer.",
@@ -228,8 +229,9 @@ class Gcp:
                         "status": "failure",
                     },
                 )
-                return
+                return False
         else:
             self.logger.info(
                 f"Target GFE {self.target_lb} already has cert {cert_name} attached, skipping."
             )
+            return True
