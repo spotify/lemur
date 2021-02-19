@@ -1076,7 +1076,7 @@ def certificate_check_destination(cert_id, dest_id):
 
     if task_id and is_task_active(function, task_id, None):
         logger.debug("Skipping task: Task is already active", extra=log_data)
-        return
+        return log_data
 
     cert = certificate_service.get(cert_id)
     dest = destinations_service.get(dest_id)
@@ -1093,14 +1093,15 @@ def certificate_check_destination(cert_id, dest_id):
                             dest.options)
     except NotImplementedError as e:
         logging.error(f"method not implemented for plugin {dest.plugin.slug}: {str(e)}", extra=log_data)
-        return
+        return log_data
 
     except SoftTimeLimitExceeded:
         logger.error("Certificate destination check: Time limit exceeded.", extra=log_data)
         metrics.send("celery.timeout", "counter", 1, metric_tags={"function": function})
-        return
+        return log_data
 
     metrics.send(f"{function}.success", "counter", 1)
+    return log_data
 
 
 @celery.task(soft_time_limit=3600)
@@ -1122,7 +1123,7 @@ def certificate_destination_check():
 
     if task_id and is_task_active(function, task_id, None):
         logger.debug("Skipping task: Task is already active", extra=log_data)
-        return
+        return log_data
 
     try:
         certs = certificate_service.get_all_valid_certs([])
@@ -1138,7 +1139,7 @@ def certificate_destination_check():
     except SoftTimeLimitExceeded:
         logger.error("Certificate destination check: Time limit exceeded.", extra=log_data)
         metrics.send("celery.timeout", "counter", 1, metric_tags={"function": function})
-        return
+        return log_data
 
     logger.debug("destination check completed", extra=log_data)
     metrics.send(f"{function}.success", "counter", 1)
