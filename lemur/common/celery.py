@@ -1056,6 +1056,52 @@ def deactivate_entrust_test_certificates():
     return log_data
 
 
+@celery.task(soft_time_limit=3600)
+def certificate_check_destination(cert_id, dest_id):
+    """
+    This celery task checks a certificate, destination pair
+    to verify that the certficate has been uploaded and uploads
+    it if it hasn't
+    :return:
+    """
+    function = f"{__name__}.{sys._getframe().f_code.co_name}"
+    logger = logging.getLogger(function)
+    task_id = None
+    if celery.current_task:
+        task_id = celery.current_task.request.id
+
+    log_data = {
+        "task_id": task_id,
+    }
+
+    if task_id and is_task_active(function, task_id, None):
+        logger.debug("Skipping task: Task is already active", extra=log_data)
+        return
+
+    cert = certificate_service.get(cert_id)
+    dest = destinations_service.get(dest_id)
+    logger.debug(f"verifying certificate {cert.name} for destination {str(dest)}", extra=log_data)
+
+    try:
+        uploaded = dest.plugin.verify(cert.name, dest.options)
+        if not uploaded:
+            logger.info(f"uploading certificate {cert.name} to destination {str(dest)}", extra=log_data)
+            dest.plugin.upload(cert.name,
+                            cert.body,
+                            cert.private_key,
+                            cert.chain,
+                            dest.options)
+    except NotImplementedError as e:
+        logging.error(f"method not implemented for plugin {dest.plugin.slug}: {str(e)}", extra=log_data)
+        return
+
+    except SoftTimeLimitExceeded:
+        logger.error("Certificate destination check: Time limit exceeded.", extra=log_data)
+        metrics.send("celery.timeout", "counter", 1, metric_tags={"function": function})
+        return
+
+    metrics.send(f"{function}.success", "counter", 1)
+
 
 @celery.task(soft_time_limit=3600)
 def certificate_destination_check():
@@ -1071,46 +1117,29 @@ def certificate_destination_check():
         task_id = celery.current_task.request.id
 
     log_data = {
-        "function": function,
-        "message": "checking certificate destinations",
         "task_id": task_id,
     }
 
     if task_id and is_task_active(function, task_id, None):
-        log_data["message"] = "Skipping task: Task is already active"
-        logger.debug(log_data)
+        logger.debug("Skipping task: Task is already active", extra=log_data)
         return
 
-    logger.debug(log_data)
     try:
         certs = certificate_service.get_all_valid_certs([])
         for cert in certs:
-            if cert.replaced:
+            if cert.replaced or len(cert.destinations) == 0:
                 continue
 
-            logger.debug(f"verifying certificate {cert.name}")
+            logger.debug(f"creating sub tasks to verify certificate {cert.name} for {len(cert.destinations)} destinations", extra=log_data)
 
             for dest in cert.destinations:
-                try:
-                    uploaded = dest.plugin.verify(cert.name, dest.options)
-                    if not uploaded:
-                        logger.info(f"uploading certificate {cert.name} to destination")
-                        dest.plugin.upload(cert.name,
-                                           cert.body,
-                                           cert.private_key,
-                                           cert.chain,
-                                           dest.options)
-                except NotImplementedError as e:
-                    logging.warning(f"method not implemented for plugin {dest.plugin.slug}: {str(e)}")
+                certificate_check_destination.delay(cert.id, dest.id)
 
     except SoftTimeLimitExceeded:
-        log_data["message"] = "Certificate destination check: Time limit exceeded."
-        logger.error(log_data)
-        sentry.captureException()
+        logger.error("Certificate destination check: Time limit exceeded.", extra=log_data)
         metrics.send("celery.timeout", "counter", 1, metric_tags={"function": function})
         return
 
-    log_data["message"] = "destination check completed"
-    logger.debug(log_data)
+    logger.debug("destination check completed", extra=log_data)
     metrics.send(f"{function}.success", "counter", 1)
     return log_data
