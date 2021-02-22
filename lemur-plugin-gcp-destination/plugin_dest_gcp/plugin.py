@@ -62,4 +62,4 @@ class GcpDestination(DestinationPlugin):
     def verify(self, cert_name, options):
         gcp = self.get_gcp(options)
         gcp_cert_name = Gcp.create_cert_name(cert_name)
-        return gcp_cert_name in gcp.get_load_balancer().get("sslCertificates", [])
+        return gcp.cert_exists(gcp_cert_name) is not None
