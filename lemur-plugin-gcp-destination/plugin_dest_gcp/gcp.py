@@ -79,27 +79,24 @@ class Gcp:
             arg: self.target_lb,
         }
 
-    def cert_exists(self, name):
-        try:
-            request = self.client.sslCertificates().get(
-                project=self.gcp_project, sslCertificate=name
-            )
-            response = request.execute()
-            self.logger.info("Certificate existed, returning")
-            return response["selfLink"]
-        except googleapiclient.errors.HttpError as e:
-            if e.resp.status == 404:
-                return None
-            raise e
-
     def create_gcp_certificate(self, name, cert, private_key, cert_chain):
         name = self.create_cert_name(name)
 
         # Check if the certificate exists and the return the certificate link
         # if it does.
-        cert_link = self.cert_exists(name)
-        if cert_link:
-            return cert_link
+        try:
+            request = self.client.sslCertificates().get(
+                project=self.gcp_project, sslCertificate=name
+            )
+            response = request.execute()
+
+            # TODO: Make sure we're actually looking at the same certificate
+            self.logger.info("Certificate existed, returning")
+            return response["selfLink"]
+
+        except googleapiclient.errors.HttpError as e:
+            if e.resp.status != 404:
+                raise e
 
         cert_bundle = cert
         if cert_chain:
