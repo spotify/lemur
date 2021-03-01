@@ -8,7 +8,10 @@
     :license: Apache, see LICENSE for more details.
 .. moduleauthor:: Kevin Glisson <kglisson@netflix.com>
 """
-from sqlalchemy import Column, Integer, ForeignKey, Index, UniqueConstraint
+import enum
+
+from sqlalchemy import Column, Integer, ForeignKey, Index, UniqueConstraint, DefaultClause, Enum, Text, func
+from sqlalchemy_utils.types.arrow import ArrowType
 
 from lemur.database import db
 
@@ -24,6 +27,11 @@ Index(
     certificate_associations.c.certificate_id,
 )
 
+class CertificateDestinationState(enum.Enum):
+    PENDING = 1
+    FAILED = 2
+    UPLOADED = 3
+
 certificate_destination_associations = db.Table(
     "certificate_destination_associations",
     Column(
@@ -32,6 +40,17 @@ certificate_destination_associations = db.Table(
     Column(
         "certificate_id", Integer, ForeignKey("certificates.id", ondelete="cascade")
     ),
+    Column(
+        "uploaded_at", ArrowType, DefaultClause(func.now())
+    ),
+    Column(
+        "state",
+        Enum(CertificateDestinationState),
+        nullable=True,
+    ),
+    Column(
+        "data", Text
+    )
 )
 
 Index(
