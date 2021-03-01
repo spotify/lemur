@@ -219,7 +219,7 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute="20"), # every hour
     },
     'certificate_destination_check': {
-        'task': 'lemur.common.celery.certificate_destination_check',
+        'task': 'lemur.common.celery.create_certificate_check_destination_tasks',
         'options': {
             'expires': 180
         },
