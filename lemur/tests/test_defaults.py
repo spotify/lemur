@@ -73,6 +73,7 @@ def test_generate_gcp_certificate_name():
     from datetime import datetime
     import re
 
+    matcher = re.compile(r"^[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?|[1-9][0-9]{0,19}$")
     assert (
         generate_gcp_certificate_name(
             "www.example.com",
@@ -91,17 +92,13 @@ def test_generate_gcp_certificate_name():
         == "example-com-20150512-ADBEEF"
     )
 
-    assert (
-        generate_gcp_certificate_name(
+    cert_name = generate_gcp_certificate_name(
             "*.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.example.com",
             datetime(2121, 5, 12, 0, 0, 0),
             "236713374230DEADBEEF"
         )
-        == "subdomain-subdomain-subdomain-subdomain-subdom-21210512-ADBEEF"
-    )
-
-    # TODO: Jonas check this regex '[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?|[1-9][0-9]{0,19}'
-
+    assert cert_name == "subdomain-subdomain-subdomain-subdomain-subdom-21210512-ADBEEF"
+    assert matcher.match(cert_name)
 
 
 def test_create_name(client):
