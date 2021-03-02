@@ -9,6 +9,7 @@ from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy_utils import JSONType
 from sqlalchemy.ext.associationproxy import association_proxy
 from lemur.database import db
+from lemur.models import CertificateDestination
 
 from lemur.plugins.base import plugins
 
@@ -21,7 +22,8 @@ class Destination(db.Model):
     description = Column(Text())
     plugin_name = Column(String(32))
 
-    certificates = association_proxy("certificate_destinations", "certificate")
+    certificates = association_proxy("destination_certificates", "certificate",
+                                     creator=lambda certificate: CertificateDestination(certificate=certificate))
 
     @property
     def plugin(self):

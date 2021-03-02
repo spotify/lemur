@@ -37,6 +37,7 @@ from lemur.domains.models import Domain
 from lemur.extensions import metrics
 from lemur.extensions import sentry
 from lemur.models import (
+    CertificateDestination,
     certificate_associations,
     certificate_source_associations,
     certificate_notification_associations,
@@ -160,7 +161,8 @@ class Certificate(db.Model):
         backref="certificate",
     )
 
-    destinations = association_proxy("certificate_destinations", "destination")
+    destinations = association_proxy("certificate_destinations", "destination",
+                                     creator=lambda destination: CertificateDestination(destination=destination))
 
     sources = relationship(
         "Source", secondary=certificate_source_associations, backref="certificate"

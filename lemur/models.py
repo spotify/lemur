@@ -38,8 +38,17 @@ class CertificateDestination(db.Model):
     destination_id = Column(Integer, ForeignKey("destinations.id", ondelete="cascade"), primary_key=True)
     certificate_id = Column(Integer, ForeignKey("certificates.id", ondelete="cascade"), primary_key=True)
 
-    destination = relationship("Destination", backref=backref("certificate_destinations"))
-    certificate = relationship("Certificate", backref=backref("certificate_destinations"))
+    destination = relationship("Destination", backref=backref("destination_certificates", cascade="all, delete-orphan"))
+    certificate = relationship("Certificate", backref=backref("certificate_destinations", cascade="all, delete-orphan"))
+
+    state = Column(
+        Enum(
+            CertificateDestinationState,
+            name="certificate_destination_state",
+        ),
+        nullable=False,
+        default=CertificateDestinationState.PENDING
+    )
 
 Index(
     "certificate_destination_associations_ix",
