@@ -23,6 +23,7 @@ from sqlalchemy import (
     Boolean,
     Index,
 )
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.expression import case, extract
@@ -38,7 +39,6 @@ from lemur.extensions import sentry
 from lemur.models import (
     certificate_associations,
     certificate_source_associations,
-    certificate_destination_associations,
     certificate_notification_associations,
     certificate_replacement_associations,
     roles_certificates,
@@ -159,11 +159,9 @@ class Certificate(db.Model):
         secondary=certificate_notification_associations,
         backref="certificate",
     )
-    destinations = relationship(
-        "Destination",
-        secondary=certificate_destination_associations,
-        backref="certificate",
-    )
+
+    destinations = association_proxy("certificate_destinations", "destination")
+
     sources = relationship(
         "Source", secondary=certificate_source_associations, backref="certificate"
     )
@@ -439,7 +437,6 @@ class Certificate(db.Model):
         return "Certificate(name={name})".format(name=self.name)
 
 
-@event.listens_for(Certificate.destinations, "append")
 def update_destinations(target, value, initiator):
     """
     Attempt to upload certificate to the new destination
@@ -449,10 +446,6 @@ def update_destinations(target, value, initiator):
     :param initiator:
     :return:
     """
-    if current_app.config.get("SYNCHRONOUS_DESTINATION_UPLOAD") == False:
-        current_app.logger.debug("Skipping destination upload")
-        return
-
     destination_plugin = plugins.get(value.plugin_name)
     status = FAILURE_METRIC_STATUS
 

@@ -10,7 +10,8 @@
 """
 import enum
 
-from sqlalchemy import Column, Integer, ForeignKey, Index, UniqueConstraint, DefaultClause, Enum, Text, func
+from sqlalchemy import Column, Integer, ForeignKey, Index, UniqueConstraint, Enum, Text
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy_utils.types.arrow import ArrowType
 
 from lemur.database import db
@@ -32,31 +33,18 @@ class CertificateDestinationState(enum.Enum):
     FAILED = 2
     UPLOADED = 3
 
-certificate_destination_associations = db.Table(
-    "certificate_destination_associations",
-    Column(
-        "destination_id", Integer, ForeignKey("destinations.id", ondelete="cascade")
-    ),
-    Column(
-        "certificate_id", Integer, ForeignKey("certificates.id", ondelete="cascade")
-    ),
-    Column(
-        "uploaded_at", ArrowType, DefaultClause(func.now())
-    ),
-    Column(
-        "state",
-        Enum(CertificateDestinationState),
-        nullable=True,
-    ),
-    Column(
-        "data", Text
-    )
-)
+class CertificateDestination(db.Model):
+    __tablename__ = "certificate_destination_associations"
+    destination_id = Column(Integer, ForeignKey("destinations.id", ondelete="cascade"), primary_key=True)
+    certificate_id = Column(Integer, ForeignKey("certificates.id", ondelete="cascade"), primary_key=True)
+
+    destination = relationship("Destination", backref=backref("certificate_destinations"))
+    certificate = relationship("Certificate", backref=backref("certificate_destinations"))
 
 Index(
     "certificate_destination_associations_ix",
-    certificate_destination_associations.c.destination_id,
-    certificate_destination_associations.c.certificate_id,
+    CertificateDestination.destination_id,
+    CertificateDestination.certificate_id,
 )
 
 certificate_source_associations = db.Table(
