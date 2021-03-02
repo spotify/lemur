@@ -226,3 +226,6 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute="*/5"), # every 5 minutes
     },
 }
+
+
+USE_GCP_CERTIFICATE_NAMES = True
