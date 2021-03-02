@@ -29,7 +29,11 @@ def text_to_slug(value, joiner="-"):
     return value.strip(joiner)
 
 
-def generate_certificate_name(common_name, issuer, not_before, not_after, san, serial=""):
+def generate_gcp_certificate_name(common_name, not_after, serial):
+    """
+    Generate a certificate name that is compliant with certificate handling in 
+    Google Cloud Platform projects (e.g. max length 62)
+    """
     short_name = common_name.replace('*.', '').replace('.','-').lower()[:46]
     not_after = not_after.strftime("%Y%m%d")
 
@@ -53,9 +57,8 @@ def certificate_name(common_name, issuer, not_before, not_after, san, serial="")
     :rtype: str
     :return:
     """
-    name_function = generate_certificate_name #current_app.config.get("CERTIFICATE_NAME_FUNCTION")
-    if name_function:
-        return name_function(common_name, issuer, not_before, not_after, san, serial)
+    if current_app.config.get("USE_GCP_CERTIFICATE_NAMES"):
+        return generate_gcp_certificate_name(common_name, not_after, serial)
     
     if san:
         t = SAN_NAMING_TEMPLATE

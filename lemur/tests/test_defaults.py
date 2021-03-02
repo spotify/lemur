@@ -68,6 +68,36 @@ def test_text_to_slug(client):
     )
 
 
+def test_generate_gcp_certificate_name():
+    from lemur.common.defaults import generate_gcp_certificate_name
+
+    assert (
+        generate_gcp_certificate_name(
+            "www.example.com",
+            datetime(2015, 5, 12, 0, 0, 0),
+            "236713374230DEADBEEF"
+        )
+        == "www-example-com-20150512-ADBEEF"
+    )
+
+    assert (
+        generate_gcp_certificate_name(
+            "*.example.com",
+            datetime(2015, 5, 12, 0, 0, 0),
+            "236713374230DEADBEEF"
+        )
+        == "example-com-20150512-DASDAS"
+    )
+
+    assert (
+        generate_gcp_certificate_name(
+            "*.example.com",
+            datetime(2015, 5, 12, 0, 0, 0),
+            "236713374230DEADBEEF"
+        )
+        == "example-com-20150512-DASDAS"
+    )
+
 def test_create_name(client):
     from lemur.common.defaults import certificate_name
     from datetime import datetime
