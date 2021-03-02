@@ -70,6 +70,8 @@ def test_text_to_slug(client):
 
 def test_generate_gcp_certificate_name():
     from lemur.common.defaults import generate_gcp_certificate_name
+    from datetime import datetime
+    import re
 
     assert (
         generate_gcp_certificate_name(
@@ -86,17 +88,21 @@ def test_generate_gcp_certificate_name():
             datetime(2015, 5, 12, 0, 0, 0),
             "236713374230DEADBEEF"
         )
-        == "example-com-20150512-DASDAS"
+        == "example-com-20150512-ADBEEF"
     )
 
     assert (
         generate_gcp_certificate_name(
-            "*.example.com",
-            datetime(2015, 5, 12, 0, 0, 0),
+            "*.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.example.com",
+            datetime(2121, 5, 12, 0, 0, 0),
             "236713374230DEADBEEF"
         )
-        == "example-com-20150512-DASDAS"
+        == "subdomain-subdomain-subdomain-subdomain-subdom-21210512-ADBEEF"
     )
+
+    # TODO: Jonas check this regex '[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?|[1-9][0-9]{0,19}'
+
+
 
 def test_create_name(client):
     from lemur.common.defaults import certificate_name
@@ -104,12 +110,11 @@ def test_create_name(client):
 
     assert (
         certificate_name(
-            "*.example.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.com",
+            "example.com",
             "Example Inc,",
             datetime(2015, 5, 7, 0, 0, 0),
             datetime(2015, 5, 12, 0, 0, 0),
             False,
-            "ASDIOJHAIUFHYUEIWHJDKASJDL:WOQIE(!@(ASDHJAKSJDAADSASJKDHASJKDHASKJDHASKDASDASDAS"
         )
         == "example.com-ExampleInc-20150507-20150512"
     )
