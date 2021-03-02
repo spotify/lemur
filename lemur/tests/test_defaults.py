@@ -68,35 +68,44 @@ def test_text_to_slug(client):
     )
 
 
-def test_generate_gcp_certificate_name():
-    from lemur.common.defaults import generate_gcp_certificate_name
+def test_generate_gcp_certificate_name(client, use_gcp_certificate_names):
+    from lemur.common.defaults import certificate_name
     from datetime import datetime
     import re
 
     matcher = re.compile(r"^[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?|[1-9][0-9]{0,19}$")
-    assert (
-        generate_gcp_certificate_name(
-            "www.example.com",
-            datetime(2015, 5, 12, 0, 0, 0),
-            "236713374230DEADBEEF"
-        )
-        == "www-example-com-20150512-ADBEEF"
+
+    cert_name = certificate_name(
+        "www.example.com",
+        "Example Inc,",
+        datetime(2015, 5, 12, 0, 0, 0),
+        datetime(2015, 5, 12, 0, 0, 0),
+        False,
+        "236713374230DEADBEEF"
+    )
+    assert cert_name == "www-example-com-20150512-ADBEEF"
+    assert matcher.match(cert_name)
+
+    cert_name = certificate_name(
+        "*.example.com",
+        "Example Inc,",
+        datetime(2015, 5, 12, 0, 0, 0),
+        datetime(2015, 5, 12, 0, 0, 0),
+        False,
+        "236713374230DEADBEEF"
     )
 
-    assert (
-        generate_gcp_certificate_name(
-            "*.example.com",
-            datetime(2015, 5, 12, 0, 0, 0),
-            "236713374230DEADBEEF"
-        )
-        == "example-com-20150512-ADBEEF"
-    )
+    assert cert_name == "example-com-20150512-ADBEEF"
+    assert matcher.match(cert_name)
 
-    cert_name = generate_gcp_certificate_name(
-            "*.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.example.com",
-            datetime(2121, 5, 12, 0, 0, 0),
-            "236713374230DEADBEEF"
-        )
+    cert_name = certificate_name(
+        "*.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.example.com",
+        "Example Inc,",
+        datetime(2121, 5, 12, 0, 0, 0),
+        datetime(2121, 5, 12, 0, 0, 0),
+        False,
+        "236713374230DEADBEEF"
+    )
     assert cert_name == "subdomain-subdomain-subdomain-subdomain-subdom-21210512-ADBEEF"
     assert matcher.match(cert_name)
 
