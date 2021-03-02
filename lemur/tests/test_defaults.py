@@ -74,11 +74,12 @@ def test_create_name(client):
 
     assert (
         certificate_name(
-            "example.com",
+            "*.example.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.subdomain.com",
             "Example Inc,",
             datetime(2015, 5, 7, 0, 0, 0),
             datetime(2015, 5, 12, 0, 0, 0),
             False,
+            "ASDIOJHAIUFHYUEIWHJDKASJDL:WOQIE(!@(ASDHJAKSJDAADSASJKDHASJKDHASKJDHASKDASDASDAS"
         )
         == "example.com-ExampleInc-20150507-20150512"
     )

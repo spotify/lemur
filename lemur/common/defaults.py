@@ -29,7 +29,16 @@ def text_to_slug(value, joiner="-"):
     return value.strip(joiner)
 
 
-def certificate_name(common_name, issuer, not_before, not_after, san):
+def generate_certificate_name(common_name, issuer, not_before, not_after, san, serial=""):
+    short_name = common_name.replace('*.', '').replace('.','-').lower()[:46]
+    not_after = not_after.strftime("%Y%m%d")
+
+    certificate_name = f"{short_name}-{not_after}-{serial[-6:]}".rstrip("-")
+    
+    return certificate_name
+
+
+def certificate_name(common_name, issuer, not_before, not_after, san, serial=""):
     """
     Create a name for our certificate. A naming standard
     is based on a series of templates. The name includes
@@ -44,6 +53,10 @@ def certificate_name(common_name, issuer, not_before, not_after, san):
     :rtype: str
     :return:
     """
+    name_function = generate_certificate_name #current_app.config.get("CERTIFICATE_NAME_FUNCTION")
+    if name_function:
+        return name_function(common_name, issuer, not_before, not_after, san, serial)
+    
     if san:
         t = SAN_NAMING_TEMPLATE
     else:
