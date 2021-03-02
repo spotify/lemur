@@ -80,6 +80,16 @@ def test_generate_gcp_certificate_name(client, use_gcp_certificate_names):
         "Example Inc,",
         datetime(2015, 5, 12, 0, 0, 0),
         datetime(2015, 5, 12, 0, 0, 0),
+        False
+    )
+    assert cert_name == "www-example-com-20150512"
+    assert matcher.match(cert_name)
+
+    cert_name = certificate_name(
+        "www.example.com",
+        "Example Inc,",
+        datetime(2015, 5, 12, 0, 0, 0),
+        datetime(2015, 5, 12, 0, 0, 0),
         False,
         "236713374230DEADBEEF"
     )
