@@ -1,9 +1,13 @@
 import hashlib
 import logging
 
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+
 import backoff
 import google.auth
 import googleapiclient.errors
+
 from googleapiclient import discovery
 
 
@@ -75,6 +79,14 @@ class Gcp:
     def create_gcp_certificate(self, name, cert, private_key, cert_chain):
         name = self.create_cert_name(name)
 
+        cert_bundle = cert
+        if cert_chain:
+            cert_bundle += f"\n{cert_chain}"
+
+        parsed_certificate = x509.load_pem_x509_certificate(
+            cert_bundle.encode("utf-8"), default_backend()
+        )
+
         # Check if the certificate exists and the return the certificate link
         # if it does.
         try:
@@ -83,17 +95,21 @@ class Gcp:
             )
             response = request.execute()
 
-            # TODO: Make sure we're actually looking at the same certificate
+            upstream_certificate = x509.load_pem_x509_certificate(
+                response["certificate"].encode("utf-8")
+            )
+
+            if parsed_certificate != upstream_certificate:
+                raise RuntimeError(
+                    "A different certificate with the same name already exists"
+                )
+
             self.logger.info("Certificate existed, returning")
             return response["selfLink"]
 
         except googleapiclient.errors.HttpError as e:
             if e.resp.status != 404:
                 raise e
-
-        cert_bundle = cert
-        if cert_chain:
-            cert_bundle += f"\n{cert_chain}"
 
         ssl_certificate_body = {
             "name": name,
