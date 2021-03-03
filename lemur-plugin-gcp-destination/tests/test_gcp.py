@@ -73,6 +73,41 @@ def test_create_cert_when_exists(get_gcp_client, tcp_ssl_proxy):
 
 
 @pytest.mark.parametrize("tcp_ssl_proxy", [True, False])
+def test_create_cert_with_same_name(get_gcp_client, tcp_ssl_proxy):
+    """Test that the client should fail if we try to upload a different certificate
+    with the same name.
+
+    Mocks the requests to Google with a preset response and compare the result.
+    """
+    test_folder = pathlib.Path(__file__).resolve().parent
+
+    # Load the required test data
+    cert = (test_folder / "assets/cert2.pem").read_text()
+    private_key = (test_folder / "assets/key.pem").read_text()
+    cert_chain = None
+
+    # Load the mock data as strings
+    cert_response = (test_folder / "assets/cert_response.json").read_text()
+
+    # Create the client
+    client = get_gcp_client(
+        gcp_project="xpn-cert-management",
+        target_lb="https-python-test-lb",
+        tcp_ssl_proxy=tcp_ssl_proxy,
+        responses=[({"status": "200"}, cert_response)],
+    )
+
+    with pytest.raises(RuntimeError) as excinfo:
+        client.create_gcp_certificate(
+            "a-test-certificate", cert, private_key, cert_chain
+        )
+
+    assert "A different certificate with the same name already exists" == str(
+        excinfo.value
+    )
+
+
+@pytest.mark.parametrize("tcp_ssl_proxy", [True, False])
 def test_create_certificate(get_gcp_client, tcp_ssl_proxy):
     """Test that the client can create a new certificate
 
