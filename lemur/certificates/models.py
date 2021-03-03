@@ -449,15 +449,23 @@ def update_destinations(target, value, initiator):
     :param initiator:
     :return:
     """
-    if current_app.config.get("SYNCHRONOUS_DESTINATION_UPLOAD") == False:
-        current_app.logger.debug("Skipping destination upload")
-        return
-
     destination_plugin = plugins.get(value.plugin_name)
     status = FAILURE_METRIC_STATUS
 
     if target.expired:
         return
+
+    if current_app.config.get("SYNCHRONOUS_DESTINATION_UPLOAD") == False:
+        current_app.logger.debug("Creating celery task to upload certificate to destination", extra={
+            "certificate_id": target.id,
+            "destination_id": value.id,
+        })
+
+        # need to import it here due to cyclic dependencies
+        from lemur.common.celery import certificate_check_destination
+        certificate_check_destination.apply_async((target.id, value.id))
+        return
+
     try:
         if target.private_key or not destination_plugin.requires_key:
             destination_plugin.upload(
