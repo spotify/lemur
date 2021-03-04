@@ -439,13 +439,13 @@ class Certificate(db.Model):
 
 
 @event.listens_for(CertificateDestination, "after_insert")
-def update_destinations(target, value, certificate_destination):
+def update_destinations(mapper, connection, certificate_destination):
     """
     Attempt to upload certificate to the new destination
 
-    :param target:
-    :param value:
-    :param initiator:
+    :param mapper:
+    :param connection:
+    :param certificate_destination:
     :return:
     """
 
