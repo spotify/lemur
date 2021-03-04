@@ -45,7 +45,7 @@ class GcpDestination(DestinationPlugin):
         self, name, body, private_key, cert_chain, options, **kwargs
     ):  # pylint: disable=unused-argument
         gcp = self.get_gcp(options)
-        res = gcp.add_certificate(name, body, private_key, cert_chain)
+        gcp.add_certificate(name, body, private_key, cert_chain)
 
         metrics.send(
             "gcp_upload_certificate",
@@ -55,7 +55,7 @@ class GcpDestination(DestinationPlugin):
                 "name": name,
                 "project": gcp.gcp_project,
                 "target-proxy-name": gcp.target_lb,
-                "status": "success" if res else "failure",
+                "status": "success",
             },
         )
 
