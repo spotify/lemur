@@ -206,27 +206,27 @@ CELERY_TIMEZONE = "UTC"
 CELERYD_HIJACK_ROOT_LOGGER = False if LOG_CONFIG_DICT else True
 
 CELERYBEAT_SCHEDULE = {
-    'fetch_all_pending_certs': {
-        'task': 'lemur.common.celery.fetch_all_pending_certs',
-        'options': {
-            'expires': 180
-        },
-        'schedule': crontab(minute="*/5"), # every 5 minutes
-    },
-    'certificate_reissue': {
-        'task': 'lemur.common.celery.certificate_reissue',
-        'options': {
-            'expires': 180
-        },
-        'schedule': crontab(minute="20"), # every hour
-    },
-    'certificate_destination_check': {
-        'task': 'lemur.common.celery.create_certificate_check_destination_tasks',
-        'options': {
-            'expires': 180
-        },
-        'schedule': crontab(minute="*/5"), # every 5 minutes
-    },
+    # 'fetch_all_pending_certs': {
+    #     'task': 'lemur.common.celery.fetch_all_pending_certs',
+    #     'options': {
+    #         'expires': 180
+    #     },
+    #     'schedule': crontab(minute="*/5"), # every 5 minutes
+    # },
+    # 'certificate_reissue': {
+    #     'task': 'lemur.common.celery.certificate_reissue',
+    #     'options': {
+    #         'expires': 180
+    #     },
+    #     'schedule': crontab(minute="20"), # every hour
+    # },
+    # 'certificate_destination_check': {
+    #     'task': 'lemur.common.celery.create_certificate_check_destination_tasks',
+    #     'options': {
+    #         'expires': 180
+    #     },
+    #     'schedule': crontab(minute="*/5"), # every 5 minutes
+    # },
 }
 
 
