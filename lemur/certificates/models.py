@@ -455,7 +455,7 @@ def update_destinations(target, value, initiator):
     if target.expired:
         return
 
-    if current_app.config.get("SYNCHRONOUS_DESTINATION_UPLOAD", True) == False:
+    if current_app.config.get("USE_ASYNCHRONOUS_DESTINATION_UPLOAD", False):
         current_app.logger.debug("Creating celery task to upload certificate to destination", extra={
             "certificate_id": target.id,
             "destination_id": value.id,
