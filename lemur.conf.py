@@ -10,7 +10,7 @@ from celery.task.schedules import crontab
 
 
 CORS = os.environ.get("CORS") == "True"
-debug = True
+DEBUG = True
 
 
 def JsonFormatter(fields=None, **kwargs):
@@ -162,6 +162,7 @@ LOG_CONFIG_DICT = dict(
             )
         },
     },
+    disable_existing_loggers=False,
 )
 
 SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','postgresql://lemur:lemur@host.docker.internal:5432/lemur')
