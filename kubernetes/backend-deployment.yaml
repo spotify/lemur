@@ -1,23 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: lemur-celery-worker
+  name: lemur-backend
   namespace: cert-management
 spec:
   selector:
     matchLabels:
-      app: lemur-celery-worker
+      app: lemur-backend
   template:
     metadata:
       labels:
-        app: lemur-celery-worker
+        app: lemur-backend
         role: spotifylemur
     spec:
       containers:
-      - name: celery
+      - name: lemur
         image: $DEPLOYMENT_IMAGE
-        command: ["celery"]
-        args: ["-A", "lemur.common.celery", "worker", "-l", "DEBUG", "--concurrency", "1", "-E"]
+        command: ["lemur", "start", "-b", "0.0.0.0:8000"]
         env:
         - name: LEMUR_ENCRYPTION_KEYS
           valueFrom:
@@ -29,6 +28,21 @@ spec:
             secretKeyRef:
               name: 'lemur-secrets'
               key: 'spotifylemur.SQLALCHEMY_DATABASE_URI'
+        - name: LEMUR_TOKEN_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.LEMUR_TOKEN_SECRET'
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.SECRET_KEY'
+        - name: GOOGLE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.GOOGLE_SECRET'
         - name: DIGICERT_API_KEY 
           valueFrom:
             secretKeyRef:
@@ -39,13 +53,22 @@ spec:
             secretKeyRef:
               name: 'lemur-secrets'
               key: 'spotifylemur.REDIS_PASSWORD'
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /api/1/healthcheck
+            port: http
+            scheme: HTTP
         resources:
           requests:
             cpu: 1
-            memory: 1Gi
+            memory: 2Gi
           limits:
-            cpu: 1
-            memory: 1Gi
+            cpu: 2
+            memory: 2Gi
       - name: cloudsql-proxy
         image: gcr.io/cloudsql-docker/gce-proxy:1.16
         command: ["/cloud_sql_proxy", "-instances=xpn-cert-management:europe-west1:lemur=tcp:5432"]

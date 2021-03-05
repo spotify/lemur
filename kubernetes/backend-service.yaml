@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lemur-backend
+  namespace: cert-management 
+  labels:
+    app: lemur
+spec:
+  # Any pods that match these label(s) are considered a part of this Service.
+  selector:
+    app: lemur-backend
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    port: 8000
+    protocol: TCP

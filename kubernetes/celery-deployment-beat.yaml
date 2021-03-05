@@ -14,7 +14,7 @@ spec:
         role: spotifylemur
     spec:
       containers:
-      - name: lemur
+      - name: celery
         image: $DEPLOYMENT_IMAGE
         command: ["celery"]
         args: ["-A", "lemur.common.celery", "beat"]
