@@ -84,8 +84,8 @@ def sync_endpoints(source):
 
     for endpoint in endpoints:
         if "external_id" in endpoint:
-            exists = endpoint_service.get_by_external_id_and_name(
-                endpoint["external_id"], endpoint["name"]
+            exists = endpoint_service.get_by_external_id(
+                endpoint["external_id"]
             )
         else:
             exists = endpoint_service.get_by_dnsname_and_port(
