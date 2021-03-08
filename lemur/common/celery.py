@@ -32,6 +32,8 @@ from lemur.pending_certificates import service as pending_certificate_service
 from lemur.plugins.base import plugins
 from lemur.sources.cli import clean, sync, validate_sources
 from lemur.sources.service import add_aws_destination_to_sources
+from lemur.sources import service as source_service
+from lemur.users import service as user_service
 
 if current_app:
     flask_app = current_app
@@ -610,7 +612,7 @@ def sync_all_sources():
 
 
 @celery.task(soft_time_limit=7200)
-def sync_source(source):
+def sync_source(source_label):
     """
     This celery task will sync the specified source.
 
@@ -619,42 +621,33 @@ def sync_source(source):
     """
 
     function = f"{__name__}.{sys._getframe().f_code.co_name}"
+    logger = logging.getLogger(function)
+
     task_id = None
     if celery.current_task:
         task_id = celery.current_task.request.id
 
     log_data = {
-        "function": function,
-        "message": "Syncing source",
-        "source": source,
+        "source": source_label,
         "task_id": task_id,
     }
 
-    if task_id and is_task_active(function, task_id, (source,)):
-        log_data["message"] = "Skipping task: Task is already active"
-        current_app.logger.debug(log_data)
+    if task_id and is_task_active(function, task_id, (source_label,)):
+        logger.debug("Skipping task: Task is already active", extra=log_data)
         return
 
-    current_app.logger.debug(log_data)
-    try:
-        sync([source])
-        metrics.send(
-            f"{function}.success", "counter", 1, metric_tags={"source": source}
-        )
-    except SoftTimeLimitExceeded:
-        log_data["message"] = "Error syncing source: Time limit exceeded."
-        current_app.logger.error(log_data)
-        sentry.captureException()
-        metrics.send(
-            "sync_source_timeout", "counter", 1, metric_tags={"source": source}
-        )
-        metrics.send("celery.timeout", "counter", 1, metric_tags={"function": function})
-        return
+    logger.info("Starting syncing source", extra=log_data)
 
-    log_data["message"] = "Done syncing source"
-    current_app.logger.debug(log_data)
-    metrics.send(f"{function}.success", "counter", 1, metric_tags={"source": source})
-    return log_data
+    user = user_service.get_by_username("lemur")
+    source = source_service.get_by_label(source_label)
+    if not source:
+        raise RuntimeError(f"Source {source_label} not found")
+
+    result = source_service.sync(source, user)
+    log_data["result"] = result
+
+    logger.info("Done syncing source", extra=log_data)
+    return
 
 
 @celery.task()
