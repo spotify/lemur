@@ -24,6 +24,7 @@ from lemur.common.redis import RedisHandler
 from lemur.destinations import service as destinations_service
 from lemur.dns_providers import cli as cli_dns_providers
 from lemur.endpoints import cli as cli_endpoints
+from lemur.endpoints import service as endpoint_service
 from lemur.extensions import metrics, sentry
 from lemur.factory import create_app
 from lemur.notifications import cli as cli_notification
@@ -79,6 +80,17 @@ def is_task_active(fun, task_id, args):
             if task.get("id") == task_id:
                 continue
             if task.get("name") == fun and task.get("args") == str(args):
+                return True
+    return False
+
+
+def is_task_scheduled(fun, args):
+    from celery.task.control import inspect
+    i = inspect()
+    for _, tasks in i.scheduled().items():
+        for task in tasks:
+            task_req = task.get("request", {})
+            if task_req.get("name") == fun and task_req.get("args") == list(args):
                 return True
     return False
 
@@ -611,7 +623,7 @@ def sync_all_sources():
     return log_data
 
 
-@celery.task(soft_time_limit=7200)
+@celery.task(soft_time_limit=60)
 def sync_source(source_label):
     """
     This celery task will sync the specified source.
@@ -1139,3 +1151,94 @@ def create_certificate_check_destination_tasks():
     logger.debug("task creation completed",
                  extra={**log_data, "num_subtasks_created": num_subtasks_created})
     return log_data
+
+
+@celery.task(soft_time_limit=60)
+def rotate_endpoint(endpoint_id):
+    function = f"{__name__}.{sys._getframe().f_code.co_name}"
+    logger = logging.getLogger(function)
+    task_id = None
+    if celery.current_task:
+        task_id = celery.current_task.request.id
+
+    log_data = {
+        "task_id": task_id,
+        "endpoint_id": endpoint_id,
+    }
+
+    endpoint = endpoint_service.get(endpoint_id)
+
+    if not endpoint:
+        raise RuntimeError("endpoint did not exist")
+
+    old_certificate_id = endpoint.certificate.id
+
+    endpoint.source.plugin.update_endpoint(
+        endpoint,
+        endpoint.certificate.replaced[0].name)
+
+    # schedule a task to remove it
+    remove_cert_args = (endpoint_id, old_certificate_id)
+    delay_before_removal = 60
+    if not is_task_scheduled(rotate_endpoint_remove_cert.name, remove_cert_args):
+        logger.info(f"Scheduling {rotate_endpoint_remove_cert.name}{str(remove_cert_args)} to execute in {delay_before_removal} seconds.")
+        rotate_endpoint_remove_cert.apply_async(
+            remove_cert_args,
+            countdown=delay_before_removal)
+    else:
+        logger.info(f"{rotate_endpoint_remove_cert.name}{str(remove_cert_args)} already scheduled.")
+
+    # sync source
+    if not is_task_scheduled(sync_source, (endpoint.source.label,)):
+        sync_source.delay(endpoint.source.label)
+
+
+@celery.task(soft_time_limit=60)
+def rotate_endpoint_remove_cert(endpoint_id, certificate_id):
+    function = f"{__name__}.{sys._getframe().f_code.co_name}"
+    logger = logging.getLogger(function)
+
+    logger.info("removing certificate from endpoint!!!")
+
+    endpoint = endpoint_service.get(endpoint_id)
+    certificate = certificate_service.get(certificate_id)
+
+    if not endpoint:
+        # note: this can happen if this is scheduled twice
+        raise RuntimeError("endpoint does not exist")
+
+    if not certificate:
+        raise RuntimeError("certificate does not exist")
+
+    endpoint.source.plugin.remove_certificate(
+        endpoint,
+        certificate.name)
+
+    # sync source
+    if not is_task_scheduled(sync_source, (endpoint.source.label,)):
+        sync_source.delay(endpoint.source.label)
+
+
+@celery.task(soft_time_limit=60)
+def rotate_all_pending_endpoints():
+    """
+    """
+    function = f"{__name__}.{sys._getframe().f_code.co_name}"
+    logger = logging.getLogger(function)
+    task_id = None
+    if celery.current_task:
+        task_id = celery.current_task.request.id
+
+    log_data = {
+        "task_id": task_id,
+    }
+
+    if task_id and is_task_active(function, task_id, None):
+        logger.debug("Skipping task: Task is already active", extra=log_data)
+        return
+
+    for endpoint in endpoint_service.get_all_pending_rotation():
+        logger.info(f"Creating task to rotate {endpoint.name} to {endpoint.certificate.replaced[0].name}")
+
+        # TODO: stagger per certificate or source?
+        rotate_endpoint.delay(endpoint.id)
