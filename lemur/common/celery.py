@@ -1102,7 +1102,7 @@ def certificate_check_destination(cert_id, dest_id):
                         cert.private_key,
                         cert.chain,
                         dest.options)
-        logger.warning("certificate uploaded to destination", extra=log_data)
+        logger.info("certificate uploaded to destination", extra=log_data)
         metrics.send(f"{function}.destination_missing_cert_resolved", "counter", 1)
 
     # at this point, the certificate MUST exist on the destination
@@ -1197,8 +1197,6 @@ def rotate_endpoint(endpoint_id):
 def rotate_endpoint_remove_cert(endpoint_id, certificate_id):
     function = f"{__name__}.{sys._getframe().f_code.co_name}"
     logger = logging.getLogger(function)
-
-    logger.info("removing certificate from endpoint!!!")
 
     endpoint = endpoint_service.get(endpoint_id)
     certificate = certificate_service.get(certificate_id)
