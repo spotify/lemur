@@ -83,14 +83,9 @@ def sync_endpoints(source):
         return new, updated, updated_by_hash
 
     for endpoint in endpoints:
-        if "external_id" in endpoint:
-            exists = endpoint_service.get_by_external_id(
-                endpoint["external_id"]
-            )
-        else:
-            exists = endpoint_service.get_by_dnsname_and_port(
-                endpoint["dnsname"], endpoint["port"]
-            )
+        exists = endpoint_service.get_by_dnsname_and_port(
+            endpoint["dnsname"], endpoint["port"]
+        )
 
         certificate_name = endpoint.pop("certificate_name")
 

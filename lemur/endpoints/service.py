@@ -73,15 +73,6 @@ def get_by_dnsname_and_port(dnsname, port):
     )
 
 
-def get_by_external_id(external_id):
-    """
-    Retrieves an endpoint by it's external_id and name.
-    :param external_id:
-    :param name:
-    """
-    return database.get(Endpoint, external_id, field="external_id")
-
-
 def get_by_source(source_label):
     """
     Retrieves all endpoints for a given source.
