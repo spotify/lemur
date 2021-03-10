@@ -2,15 +2,13 @@ import pytest
 import googleapiclient.http
 import pathlib
 
-import plugin_dest_gcp.gcp
+import plugin_gcp.gcp
 
 
 @pytest.fixture
 def get_gcp_client():
     def inner(
-        gcp_project="xpn-cert-management",
-        target_lb="https-python-test-lb",
-        tcp_ssl_proxy=False,
+        project="foo",
         responses=None,
     ):
         # HttpMock/HttpMockSequence allows us to set custom responses
@@ -32,10 +30,8 @@ def get_gcp_client():
 
         http = googleapiclient.http.HttpMockSequence(responses)
 
-        return plugin_dest_gcp.gcp.Gcp(
-            gcp_project=gcp_project,
-            target_lb=target_lb,
-            tcp_ssl_proxy=tcp_ssl_proxy,
+        return plugin_gcp.gcp.Gcp(
+            project=project,
             http=http,
         )
 

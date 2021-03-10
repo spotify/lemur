@@ -3,4 +3,4 @@ requires = ["setuptools>=41.0", "setuptools-scm", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
-omit = ["plugin_dest_gcp/plugin.py"]
+omit = ["plugin_gcp/plugin.py"]

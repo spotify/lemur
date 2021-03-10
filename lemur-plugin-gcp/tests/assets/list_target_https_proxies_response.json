@@ -1,0 +1,19 @@
+{
+ "kind": "compute#targetHttpsProxyList",
+ "id": "projects/test-project/global/targetHttpsProxies",
+ "items": [
+  {
+   "kind": "compute#targetHttpsProxy",
+   "id": "123",
+   "creationTimestamp": "2020-11-18T04:32:39.304-08:00",
+   "name": "https-test-lb-target-proxy",
+   "selfLink": "https://www.googleapis.com/compute/v1/projects/test-project/global/targetHttpsProxies/https-test-lb-target-proxy",
+   "urlMap": "https://www.googleapis.com/compute/v1/projects/test-project/global/urlMaps/https-test-lb",
+   "sslCertificates": [
+    "https://www.googleapis.com/compute/v1/projects/test-project/global/sslCertificates/foo-example-com-20220308-e3f8cc"
+   ],
+   "quicOverride": "NONE"
+  }
+ ],
+ "selfLink": "https://www.googleapis.com/compute/v1/projects/test-project/global/targetHttpsProxies"
+}
