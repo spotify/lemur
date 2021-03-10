@@ -50,7 +50,7 @@ class GcpSource(SourcePlugin):
                 )
             )
 
-        return certs
+        return list(reversed(certs))
 
     def get_endpoints(self, options, **kwargs):
         client = get_gcp_client_from_options(options)
