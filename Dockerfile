@@ -50,6 +50,9 @@ RUN cd lemur-plugin-gcp && pip install . && cd ..
 COPY lemur-plugin-ffwd lemur-plugin-ffwd
 RUN cd lemur-plugin-ffwd && pip install . && cd ..
 
+COPY lemur-plugin-slack lemur-plugin-slack
+RUN cd lemur-plugin-slack && pip install . && cd ..
+
 # copy static files from builder
 COPY --from=public-lemur /app/lemur/static/dist /opt/lemur/static
 

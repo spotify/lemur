@@ -39,6 +39,11 @@ spec:
             secretKeyRef:
               name: 'lemur-secrets'
               key: 'spotifylemur.REDIS_PASSWORD'
+        - name: SLACK_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.SLACK_BOT_TOKEN'
         resources:
           requests:
             cpu: 1

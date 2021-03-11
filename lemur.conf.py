@@ -106,7 +106,6 @@ LEMUR_DEFAULT_ORGANIZATIONAL_UNIT = str(os.environ.get('LEMUR_DEFAULT_ORGANIZATI
 
 PLUGINS = [
     'email_notification',
-    'slack_notification',
     'java_truststore_export',
     'java_keystore_export',
     'openssl_export',
@@ -116,6 +115,7 @@ PLUGINS = [
     'ffwd',
     'gcp_dest',
     'gcp_source',
+    'slack2_notification',
 ]
 
 LEMUR_DEFAULT_ISSUER_PLUGIN = 'digicert_issuer'
@@ -247,3 +247,5 @@ CELERYBEAT_SCHEDULE = {
 
 
 USE_GCP_CERTIFICATE_NAMES = True
+
+SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
