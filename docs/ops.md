@@ -2,8 +2,8 @@
 
 ## Source Repositories
 
-* public upstream [Netflix/lemur](https://github.com/Netflix/lemur/) (pulled in as submodule in internal lemur)
-* public fork [spotify/lemur](https://github.com/spotify/lemur/)
+* public upstream [Netflix/lemur](https://github.com/Netflix/lemur/) 
+* public fork [spotify/lemur](https://github.com/spotify/lemur/) (pulled in as submodule in internal lemur)
 * internal [spotify-lemur](https://ghe.spotify.net/wasabi/spotify-lemur/)
 * internal [spotify-lemur-redis](https://ghe.spotify.net/wasabi/spotify-lemur-redis/)
 
