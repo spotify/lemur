@@ -1,11 +1,8 @@
 # Lemur Dev Handbook
 
 ## Setting up a dev environment
-`Requirements: Docker and docker-compose`
-
-Everything below uses Docker to setup the environment so Python and
-the required dependencies for Lemur shouldn't be needed. So no need to create
-a python virtual env either.
+`Requirements: docker, docker-compose, python37`
+`System packages required: postgresql redis openldap cyrus_sasl openssl`
 
 ### Clone repo and initialize submodule
 
@@ -23,46 +20,98 @@ URL instead:
 
 ```bash
 cd public-lemur
-git config remote.origin.pushurl git@github.com:spotify/lemur.git 
+git config remote.origin.pushurl git@github.com:spotify/lemur.git
+```
+
+### Installing Lemur
+Create a virtualenv and activate
+
+```bash
+$ python -m venv venv
+$ . venv/bin/activate
+```
+
+Install Lemur and plugins in development mode:
+```bash
+$ pip install -e public-lemur/
+$ pip install -e lemur-plugin-ffwd/
+$ pip install -e lemur-plugin-gcp/
+$ pip install -e lemur-plugin-slack/
 ```
 
 ### Create Lemur env file and initialize database
 
 ```bash
-./dev-setup.sh
+$ ./generate-env.py > .lemur-env
+$ source .lemur-env
 ```
 
 This will create a file `.lemur-env` in the folder with local configuration
 overrides.
 
+Start postgres:
+```bash
+$ docker-compose up -d postgres
+
+To initialize the database:
+
+```bash
+$ cd public-lemur/lemur/
+$ lemur init
+```
+
 During the setup you will be asked for a password for the `lemur` user. This
 user is the Lemur administration user you can use to login with.
 
-## Building and Running Lemur
+## Running Lemur
 
-Build the spotify-lemur container locally
+Lemur consists of multiple components.
+
+1. Lemur backend (Flask application)
+1. Frontend (Written in Javascript)
+1. Celery Beat (Periodic task scheduler)
+1. Celery Worker (Celery worker to run tasks)
+1. PostgreSQL (Database)
+1. Redis (Backend for Celery task orchestration)
+
+You don't have to run everything if you're only on certain parts. However, the
+backend code will create tasks for certain operations, e.g. destination upload
+that happens when you attach a destination to a certificate.
+
+For development mode we use an nginx docker container to serve the frontend
+and act as a reverse proxy to the backend development server running on port
+5000.
+
+
+### Backend
+Backend development server that will auto-reload on code changes:
 
 ```bash
-docker build -t spotify-lemur .
+$ lemur runserver
 ```
 
-Start the local database and celery services
-
+### Nginx for Frontend and Backend proxy
 ```bash
-docker-compose up
+$ docker-compose up -d nginx
 ```
 
-Run the spotify-lemur container
+Add `--build` to rebuild the container if you've made any changes to `Dockerfile.nginx`.
 
+### Redis
 ```bash
-./dev-run.sh
+$ docker-compose up -d redis
 ```
 
-or
-
+### Celery worker
 ```bash
-docker run -it --rm --env-file .lemur-env -p 8080:80 spotify-lemur
+$ celery -A lemur.common.celery worker --loglevel=debug --concurrency 1 -E
 ```
+
+### Celery beat (period task scheduler)
+```bash
+celery -A lemur.common.celery beat --loglevel=debug
+```
+
 
 You should now be able to access Lemur at http://localhost:8080. Login with
 the user `lemur` and the password you created during the setup phase.
