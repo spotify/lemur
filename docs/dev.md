@@ -10,6 +10,7 @@ Clone the repository and initialize the submodule `public-lemur` which points
 to the [public fork of Netflix/lemur in our Github spotify org](https://github.com/spotify/lemur):
 ```bash
 git clone git@ghe.spotify.net:wasabi/spotify-lemur.git
+cd spotify-lemur
 git submodule update --init --recursive
 ```
 
