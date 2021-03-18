@@ -4,6 +4,24 @@
 `Requirements: docker, docker-compose, python37`
 `System packages required: postgresql redis openldap cyrus_sasl openssl`
 
+
+### MacOS packages installation
+Install the required system packages, ie with `brew install`.
+
+If you experience errors installing packages while initializing submodules, you might have to link openssl like: 
+
+```bash
+brew link openssl
+export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"
+```
+TODO: cyrus_sasl not found (ignore if not a problem?)
+
+### Linux package installation
+Install the required system packages, ie with `apt-get install`.
+
+If you didn't have python 3.7, you might need the `libffi(-dev)` package before installing it (otherwise you might get `_ctype module not found` errors later).
+
 ### Clone repo and initialize submodule
 
 Clone the repository and initialize the submodule `public-lemur` which points
