@@ -40,29 +40,36 @@ URL instead:
 ```bash
 cd public-lemur
 git config remote.origin.pushurl git@github.com:spotify/lemur.git
+cd ..
 ```
 
 ### Installing Lemur
 Create a virtualenv and activate
-
 ```bash
-$ python -m venv venv
-$ . venv/bin/activate
+python -m venv venv
+. venv/bin/activate
+```
+
+or if using pyenv
+```bash
+pyenv install 3.7.10
+pyenv virtualenv 3.7.10 spotify-lemur
+pyenv local spotify-lemur
 ```
 
 Install Lemur and plugins in development mode:
 ```bash
-$ pip install -e public-lemur/
-$ pip install -e lemur-plugin-ffwd/
-$ pip install -e lemur-plugin-gcp/
-$ pip install -e lemur-plugin-slack/
+pip install -e public-lemur/
+pip install -e lemur-plugin-ffwd/
+pip install -e lemur-plugin-gcp/
+pip install -e lemur-plugin-slack/
 ```
 
 ### Create Lemur env file and initialize database
 
 ```bash
-$ ./generate-env.py > .lemur-env
-$ source .lemur-env
+./generate-env.py > .lemur-env
+source .lemur-env
 ```
 
 This will create a file `.lemur-env` in the folder with local configuration
@@ -70,15 +77,17 @@ overrides.
 
 Start postgres:
 ```bash
-$ docker-compose up -d postgres
+docker-compose up -d postgres
+```
 
 To initialize the database:
 
 ```bash
-$ cd public-lemur/lemur/
-$ lemur init
+cd public-lemur/lemur/
+lemur init
 ```
 
+TODO: re-vivist: that did not show up
 During the setup you will be asked for a password for the `lemur` user. This
 user is the Lemur administration user you can use to login with.
 
@@ -101,29 +110,28 @@ For development mode we use an nginx docker container to serve the frontend
 and act as a reverse proxy to the backend development server running on port
 5000.
 
-
 ### Backend
 Backend development server that will auto-reload on code changes:
 
 ```bash
-$ lemur runserver
+lemur runserver
 ```
 
 ### Nginx for Frontend and Backend proxy
 ```bash
-$ docker-compose up -d nginx
+docker-compose up -d nginx
 ```
 
 Add `--build` to rebuild the container if you've made any changes to `Dockerfile.nginx`.
 
 ### Redis
 ```bash
-$ docker-compose up -d redis
+docker-compose up -d redis
 ```
 
 ### Celery worker
 ```bash
-$ celery -A lemur.common.celery worker --loglevel=debug --concurrency 1 -E
+celery -A lemur.common.celery worker --loglevel=debug --concurrency 1 -E
 ```
 
 ### Celery beat (period task scheduler)

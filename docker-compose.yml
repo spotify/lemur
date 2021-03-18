@@ -20,7 +20,6 @@ services:
       - "6379:6379"
 
   nginx:
-    network_mode: host
     ports:
       - "8080:8080"
     build:
