@@ -11,6 +11,7 @@ services:
       - ./lemur_init.sql:/docker-entrypoint-initdb.d/lemur_init.sql
     environment:
       - POSTGRES_PASSWORD
+
   redis:
     image: "redis:alpine"
     # TODO Find a better way to pass the password
@@ -19,19 +20,25 @@ services:
     ports:
       - "6379:6379"
 
-  nginx:
+  nginx-mac:
+    ports: 
+      - "8080:8080"
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx-mac
+
+  nginx-linux:
     network_mode: host
     build:
       context: .
-      dockerfile: Dockerfile.nginx
-    extra_hosts: 
-      backend: docker.host.internal 
+      dockerfile: Dockerfile.nginx-linux
 
   celery-beat:
     image: spotify-lemur
     command: "celery -A lemur.common.celery beat"
     env_file:
     - ".lemur-env"
+
   celery-worker:
     image: spotify-lemur
     command: celery -A lemur.common.celery worker --concurrency 10 -E -n lemurworker1@%%h

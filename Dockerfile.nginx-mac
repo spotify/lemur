@@ -1,0 +1,10 @@
+FROM gcr.io/xpn-cert-management/spotify-lemur-frontend@sha256:2d548d4f50ddafd81db9f44026e7183d1f73e84e34c86a5af128aa828adec68d AS public-lemur
+
+RUN apt install -y nginx
+
+# setup nginx
+COPY nginx.conf.local-mac /etc/nginx/sites-available/default
+
+EXPOSE 8080
+
+CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
