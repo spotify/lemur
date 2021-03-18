@@ -24,6 +24,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.nginx
+    extra_hosts: 
+      backend: docker.host.internal 
 
   celery-beat:
     image: spotify-lemur
