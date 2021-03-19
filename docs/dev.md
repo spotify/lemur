@@ -4,8 +4,25 @@
 `Requirements: docker, docker-compose, python37`
 `System packages required: postgresql redis openldap cyrus_sasl openssl`
 
-### Clone repo and initialize submodule
 
+### MacOS packages installation
+Install the required system packages, ie with `brew install`.
+
+If you experience errors installing packages while initializing submodules, you might have to link openssl like: 
+
+```bash
+brew link openssl
+export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"
+```
+TODO: cyrus_sasl not found (ignore if not a problem?)
+
+### Linux package installation
+Install the required system packages, ie with `apt-get install`.
+
+If you didn't have python 3.7, you might need the `libffi(-dev)` package before installing it (otherwise you might get `_ctype module not found` errors later).
+
+### Clone repo and initialize submodule
 Clone the repository and initialize the submodule `public-lemur` which points
 to the [public fork of Netflix/lemur in our Github spotify org](https://github.com/spotify/lemur):
 ```bash
@@ -22,29 +39,37 @@ URL instead:
 ```bash
 cd public-lemur
 git config remote.origin.pushurl git@github.com:spotify/lemur.git
+cd ..
 ```
 
 ### Installing Lemur
 Create a virtualenv and activate
-
 ```bash
-$ python -m venv venv
-$ . venv/bin/activate
+python -m venv venv
+. venv/bin/activate
+```
+
+or if using pyenv
+```bash
+pyenv install 3.7.10
+pyenv virtualenv 3.7.10 spotify-lemur
+pyenv local spotify-lemur
 ```
 
 Install Lemur and plugins in development mode:
 ```bash
-$ pip install -e public-lemur/
-$ pip install -e lemur-plugin-ffwd/
-$ pip install -e lemur-plugin-gcp/
-$ pip install -e lemur-plugin-slack/
+pip install -e public-lemur/
+pip install -e lemur-plugin-ffwd/
+pip install -e lemur-plugin-gcp/
+pip install -e lemur-plugin-slack/
 ```
 
 ### Create Lemur env file and initialize database
+To clean up after previous development, stop all docker containers and execute `./dev-cleanup.sh`.
 
 ```bash
-$ ./generate-env.py > .lemur-env
-$ source .lemur-env
+./generate-env.py > .lemur-env
+source .lemur-env
 ```
 
 This will create a file `.lemur-env` in the folder with local configuration
@@ -52,20 +77,20 @@ overrides.
 
 Start postgres:
 ```bash
-$ docker-compose up -d postgres
+docker-compose up -d postgres
+```
 
-To initialize the database:
-
+Initialize the database:
 ```bash
-$ cd public-lemur/lemur/
-$ lemur init
+source .lemur-env
+cd public-lemur/lemur/
+lemur init
 ```
 
 During the setup you will be asked for a password for the `lemur` user. This
 user is the Lemur administration user you can use to login with.
 
 ## Running Lemur
-
 Lemur consists of multiple components.
 
 1. Lemur backend (Flask application)
@@ -83,29 +108,36 @@ For development mode we use an nginx docker container to serve the frontend
 and act as a reverse proxy to the backend development server running on port
 5000.
 
-
 ### Backend
 Backend development server that will auto-reload on code changes:
 
 ```bash
-$ lemur runserver
+lemur runserver
 ```
 
 ### Nginx for Frontend and Backend proxy
+If you're on mac:
 ```bash
-$ docker-compose up -d nginx
+source .lemur-env
+docker-compose up -d nginx-mac
+```
+
+If you're on linux:
+```bash
+source .lemur-env
+docker-compose up -d nginx-linux
 ```
 
 Add `--build` to rebuild the container if you've made any changes to `Dockerfile.nginx`.
 
 ### Redis
 ```bash
-$ docker-compose up -d redis
+docker-compose up -d redis
 ```
 
 ### Celery worker
 ```bash
-$ celery -A lemur.common.celery worker --loglevel=debug --concurrency 1 -E
+celery -A lemur.common.celery worker --loglevel=debug --concurrency 1 -E
 ```
 
 ### Celery beat (period task scheduler)
@@ -118,7 +150,6 @@ You should now be able to access Lemur at http://localhost:8080. Login with
 the user `lemur` and the password you created during the setup phase.
 
 ## Making changes in upstream code: working with the submodule  
-
 If you need to make code changes in the original Netflix/lemur code, you can
 use the submodule to commit changes to our 
 [public lemur fork on Github](https://github.com/spotify/lemur):
@@ -149,9 +180,7 @@ use the submodule to commit changes to our
 For local development you can simply change any file in `public-lemur` and run
 `docker build -t spotify-lemur` and then `./dev-run.sh` to test it. 
 
-
 ## Testing Digicert API Integration
-
 If you want to test the lemur's Digicert Plugin, please add the 
 `DIGICERT_API_KEY` variable to the `.lemur-env` file. You find API key in the 
 LastPass's Lemur shared folder. For testing please use the **(testing)** key.
