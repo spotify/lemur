@@ -756,7 +756,7 @@ def certificate_reissue():
         current_app.logger.info(log_data)
 
     log_data["message"] = "reissuance completed"
-    current_app.logger.debug(log_data)
+    current_app.logger.info(log_data)
     metrics.send(f"{function}.success", "counter", 1)
     return log_data
 
