@@ -23,7 +23,6 @@ Install the required system packages, ie with `apt-get install`.
 If you didn't have python 3.7, you might need the `libffi(-dev)` package before installing it (otherwise you might get `_ctype module not found` errors later).
 
 ### Clone repo and initialize submodule
-
 Clone the repository and initialize the submodule `public-lemur` which points
 to the [public fork of Netflix/lemur in our Github spotify org](https://github.com/spotify/lemur):
 ```bash
@@ -66,6 +65,7 @@ pip install -e lemur-plugin-slack/
 ```
 
 ### Create Lemur env file and initialize database
+To clean up after previous development, stop all docker containers and execute `./dev-cleanup.sh`.
 
 ```bash
 ./generate-env.py > .lemur-env
@@ -80,9 +80,9 @@ Start postgres:
 docker-compose up -d postgres
 ```
 
-To initialize the database:
-
+Initialize the database:
 ```bash
+source .lemur-env
 cd public-lemur/lemur/
 lemur init
 ```
@@ -92,7 +92,6 @@ During the setup you will be asked for a password for the `lemur` user. This
 user is the Lemur administration user you can use to login with.
 
 ## Running Lemur
-
 Lemur consists of multiple components.
 
 1. Lemur backend (Flask application)
@@ -118,8 +117,16 @@ lemur runserver
 ```
 
 ### Nginx for Frontend and Backend proxy
+If you're on mac:
 ```bash
-docker-compose up -d nginx
+source .lemur-env
+docker-compose up -d nginx-mac
+```
+
+If you're on linux:
+```bash
+source .lemur-env
+docker-compose up -d nginx-linux
 ```
 
 Add `--build` to rebuild the container if you've made any changes to `Dockerfile.nginx`.
@@ -144,7 +151,6 @@ You should now be able to access Lemur at http://localhost:8080. Login with
 the user `lemur` and the password you created during the setup phase.
 
 ## Making changes in upstream code: working with the submodule  
-
 If you need to make code changes in the original Netflix/lemur code, you can
 use the submodule to commit changes to our 
 [public lemur fork on Github](https://github.com/spotify/lemur):
@@ -175,9 +181,7 @@ use the submodule to commit changes to our
 For local development you can simply change any file in `public-lemur` and run
 `docker build -t spotify-lemur` and then `./dev-run.sh` to test it. 
 
-
 ## Testing Digicert API Integration
-
 If you want to test the lemur's Digicert Plugin, please add the 
 `DIGICERT_API_KEY` variable to the `.lemur-env` file. You find API key in the 
 LastPass's Lemur shared folder. For testing please use the **(testing)** key.
