@@ -87,7 +87,6 @@ cd public-lemur/lemur/
 lemur init
 ```
 
-TODO: re-vivist: that did not show up
 During the setup you will be asked for a password for the `lemur` user. This
 user is the Lemur administration user you can use to login with.
 
