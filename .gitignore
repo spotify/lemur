@@ -118,3 +118,6 @@ mkdocs*.yml~
 # lemur custom
 Dockerfile.local-dev
 .lemur-env
+
+# celery
+celerybeat.pid

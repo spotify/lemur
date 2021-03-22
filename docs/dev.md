@@ -68,7 +68,7 @@ pip install -e lemur-plugin-slack/
 To clean up after previous development, stop all docker containers and execute `./dev-cleanup.sh`.
 
 ```bash
-./generate-env.py > .lemur-env
+python generate-env.py > .lemur-env
 source .lemur-env
 ```
 
