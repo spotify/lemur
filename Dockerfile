@@ -35,7 +35,6 @@ RUN apt-get update && apt-get install -y \
   gcc \
   libpq-dev \
   nginx \
-  supervisor \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
@@ -62,11 +61,4 @@ ENV LEMUR_CONF /opt/lemur/lemur.conf.py
 # setup nginx
 COPY nginx.conf /etc/nginx/sites-available/default
 
-# setup supervisor
-RUN mkdir -p /var/log/supervisor
-COPY supervisord.conf .
-
 EXPOSE 80
-
-# ENTRYPOINT [ "lemur" ]
-CMD ["/usr/bin/supervisord", "-c", "supervisord.conf"]
