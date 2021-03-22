@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y \
   libssl-dev \
   gcc \
   libpq-dev \
+  nginx \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
@@ -56,5 +57,8 @@ COPY --from=public-lemur /app/lemur/static/dist /opt/lemur/static
 
 COPY lemur.conf.py /opt/lemur/
 ENV LEMUR_CONF /opt/lemur/lemur.conf.py
+
+# setup nginx
+COPY nginx.conf /etc/nginx/sites-available/default
 
 EXPOSE 80
