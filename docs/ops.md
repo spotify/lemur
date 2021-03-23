@@ -3,9 +3,10 @@
 ## Source Repositories
 
 * public upstream [Netflix/lemur](https://github.com/Netflix/lemur/) 
-* public fork [spotify/lemur](https://github.com/spotify/lemur/) (pulled in as submodule in internal lemur)
-* internal [spotify-lemur](https://ghe.spotify.net/wasabi/spotify-lemur/)
-* internal [spotify-lemur-redis](https://ghe.spotify.net/wasabi/spotify-lemur-redis/)
+* public fork [spotify/lemur](https://github.com/spotify/lemur/) (pulled in as submodule in internal lemur-frontend and spotify-lemur)
+* internal [lemur-frontend](https://ghe.spotify.net/wasabi/lemur-frontend/) (static frontend code, used as base-image for spotify-lemur)
+* internal [spotify-lemur](https://ghe.spotify.net/wasabi/spotify-lemur/) (main internal repository, including build pipeline, GKE deployment definitions and docs) 📍 you are here
+* internal [spotify-lemur-redis](https://ghe.spotify.net/wasabi/spotify-lemur-redis/) (plain redis instance for celery)
 
 ## Architecture and components
 
