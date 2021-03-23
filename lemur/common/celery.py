@@ -734,7 +734,7 @@ def certificate_reissue():
 
     current_app.logger.debug(log_data)
 
-
+    # set the lemur identity
     identity_changed.send(current_app._get_current_object(), identity=Identity(1))
 
     for certificate in certificate_service.get_all_pending_reissue():
