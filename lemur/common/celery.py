@@ -181,7 +181,7 @@ def report_number_pending_tasks(**kwargs):
     with flask_app.app_context():
         metrics.send(
             "celery.new_pending_task",
-            "TIMER",
+            "GAUGE",
             1,
             metric_tags=get_celery_request_tags(**kwargs),
         )
@@ -197,7 +197,7 @@ def report_successful_task(**kwargs):
     with flask_app.app_context():
         tags = get_celery_request_tags(**kwargs)
         red.set(f"{tags['task_name']}.last_success", int(time.time()))
-        metrics.send("celery.successful_task", "TIMER", 1, metric_tags=tags)
+        metrics.send("celery.successful_task", "GAUGE", 1, metric_tags=tags)
 
 
 @task_failure.connect
@@ -222,7 +222,7 @@ def report_failed_task(**kwargs):
 
         log_data.update(error_tags)
         current_app.logger.error(log_data)
-        metrics.send("celery.failed_task", "TIMER", 1, metric_tags=error_tags)
+        metrics.send("celery.failed_task", "GAUGE", 1, metric_tags=error_tags)
 
 
 @task_revoked.connect
@@ -242,7 +242,7 @@ def report_revoked_task(**kwargs):
 
         log_data.update(error_tags)
         current_app.logger.error(log_data)
-        metrics.send("celery.revoked_task", "TIMER", 1, metric_tags=error_tags)
+        metrics.send("celery.revoked_task", "GAUGE", 1, metric_tags=error_tags)
 
 
 @celery.task(soft_time_limit=600)
