@@ -146,6 +146,8 @@ celery -A lemur.common.celery beat --loglevel=debug
 ```
 
 ### Celery flower (graphical task overview)
+Before running flower the first time, you need to install it in you python 
+virtual env with `pip install flower`. Then you can run
 ```bash
 flower --broker=redis://:lemur@localhost:6379/0
 ```
