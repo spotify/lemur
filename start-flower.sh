@@ -1,3 +1,10 @@
 #!/bin/bash
 
-flower --conf=/opt/lemur/celery-flower.conf.py --url_prefix=celery-flower --auth=.*@spotify\.com --broker=redis://:${REDIS_PASSWORD}@lemur-redis.services.gew1.spotify.net:6379/0
+flower \
+  --debug=True \
+  --url_prefix=celery-flower \
+  --auth=.*@spotify\.com \
+  --oauth2_key=421791425557-lfk56lqi3rnhi4n2fr2rakmbv4lbc93l.apps.googleusercontent.com \
+  --oauth2_secret=${GOOGLE_SECRET} \
+  --oauth2_redirect_uri=https://certs.spotify.net \
+  --broker=redis://:${REDIS_PASSWORD}@lemur-redis.services.gew1.spotify.net:6379/0
