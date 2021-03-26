@@ -24,9 +24,13 @@
   * [lemur-celery-beat](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/lemur-celery-beat?project=gke-xpn-1) scheduler (containers: lemur, cloudsql-proxy)
   * [lemur-celery-worker](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/lemur-celery-worker?project=gke-xpn-1) (containers: lemur, cloudsql-proxy)
   * [lemur-redis-primary-deployment](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-4133/cert-management/lemur-redis-primary-deployment?project=gke-xpn-1) (containers: redis)
+  * [celery-flower](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/celery-flower?project=gke-xpn-1) (containers: celery)
+
 
 ## Logging and Monitoring
 
 * [Logs in xpn-cert-management project](https://console.cloud.google.com/logs/query?organizationId=642708779950&project=xpn-cert-management) for lemur and celery containers and cloud sql database
+
+* [Celery Flower](https://certs.spotify.net/celery-flower/) - celery task overview
 
 * [Grafana dashboard with ops metrics](https://grafana.spotify.net/d/hlLWwxBGk/lemur)
