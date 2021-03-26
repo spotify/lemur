@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: lemur-celery-flower
+  name: celery-flower
   namespace: cert-management
 spec:
   selector:
     matchLabels:
-      app: lemur-celery-flower
+      app: celery-flower
   template:
     metadata:
       labels:
-        app: lemur-celery-flower
+        app: celery-flower
         role: spotifylemur
     spec:
       containers:
