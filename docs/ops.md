@@ -76,14 +76,14 @@ and you will get a postgres prompt.
 To delete a certificate and all references from the database, run these commands, replacing `CERT_ID` with the numerical id of the certificate (eg check with `select id,name,cn from certificates;`):
 
 ```
-delete from certificate_associations where certificate_id=CERT_ID>;
-delete from roles_certificates where certificate_id=CERT_ID>;
-delete from logs where certificate_id=CERT_ID>;
-delete from certificates where id=CERT_ID>;
-delete from certificate_destination_associations where certificate_id=CERT_ID>;
-delete from certificate_source_associations where certificate_id=CERT_ID>;
-delete from certificate_notification_associations where certificate_id=CERT_ID>;
-delete from certificate_replacement_associations where certificate_id=CERT_ID>;
+delete from certificate_associations where certificate_id=CERT_ID;
+delete from roles_certificates where certificate_id=CERT_ID;
+delete from logs where certificate_id=CERT_ID;
+delete from certificates where id=CERT_ID;
+delete from certificate_destination_associations where certificate_id=CERT_ID;
+delete from certificate_source_associations where certificate_id=CERT_ID;
+delete from certificate_notification_associations where certificate_id=CERT_ID;
+delete from certificate_replacement_associations where certificate_id=CERT_ID;
 ```
 
 Note that the `domains` table might still have entries with the domains the certificate used.
