@@ -145,24 +145,33 @@ celery -A lemur.common.celery worker --loglevel=debug --concurrency 1 -E
 celery -A lemur.common.celery beat --loglevel=debug
 ```
 
+### Celery flower (graphical task overview)
+```bash
+flower --broker=redis://:lemur@localhost:6379/0
+```
+
 
 You should now be able to access Lemur at http://localhost:8080. Login with
 the user `lemur` and the password you created during the setup phase.
 
+On http://localhost:5555 you can view your local Celery flower instance.
+
 ## Making changes in upstream code: working with the submodule  
-If you need to make code changes in the original Netflix/lemur code, you can
-use the submodule to commit changes to our 
-[public lemur fork on Github](https://github.com/spotify/lemur):
+
+For local development you can simply change any file, including those in 
+`public-lemur` and rerun Lemur - it will pick up source changes as it was 
+installed in development mode.
+
+When you're done and you have made code changes in the original Netflix/lemur 
+code (files in `public-lemur`), you can use the submodule to commit changes to 
+our [public lemur fork on Github](https://github.com/spotify/lemur):
 
 1. `cd public-lemur` so git is working in the submodule context.
 1. Create a new branch `git checkout -b my-new-feature-or-fix`.
-1. Change any file in `public-lemur/*` 
-1. To test your changes locally, simply build and run the docker container. Docker 
-   will pick up the current version of any files in `public-lemur/*` as build context:
-   `cd ..`, `docker build -t spotify-lemur .`, `./dev-run.sh`.
-1. When happy with your changes, make sure you're back in the submodule context
-   (`cd public-lemur`), make a commit (`git commit -m "..."`) and
-   push the branch to the fork (`git push --set-upstream origin my-new-feature-or-fix`)
+1. Review the changes of your files in `public-lemur/*` eg with with `git diff`. 
+1. When happy with your changes, make a commit (`git commit -m "..."`) and
+   push the branch to the fork 
+   (`git push --set-upstream origin my-new-feature-or-fix`)
 1. Create a PR on the public fork, get it reviewed and merged. NOTE: By default
    Github suggests to make the PR against the Netflix repository as ours was
    forked from there. **You have to manually change the base to `spotify/lemur`** 
@@ -177,8 +186,6 @@ use the submodule to commit changes to our
    This will trigger the build pipeline on your branch and you can create a PR 
    if the tests succeed. 
 
-For local development you can simply change any file in `public-lemur` and run
-`docker build -t spotify-lemur` and then `./dev-run.sh` to test it. 
 
 ## Testing Digicert API Integration
 If you want to test the lemur's Digicert Plugin, please add the 
