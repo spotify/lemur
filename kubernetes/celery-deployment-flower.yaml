@@ -24,6 +24,11 @@ spec:
             secretKeyRef:
               name: 'lemur-secrets'
               key: 'spotifylemur.REDIS_PASSWORD'
+        - name: GOOGLE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: 'lemur-secrets'
+              key: 'spotifylemur.GOOGLE_SECRET'
         resources:
           requests:
             cpu: 1
