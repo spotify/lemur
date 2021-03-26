@@ -54,6 +54,7 @@ RUN cd lemur-plugin-slack && pip install . && cd ..
 
 # install flower
 RUN pip install flower 
+COPY start-flower.sh celery-flower-conf.py /opt/lemur/
 
 # copy static files from builder
 COPY --from=public-lemur /app/lemur/static/dist /opt/lemur/static

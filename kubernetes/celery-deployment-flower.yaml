@@ -17,7 +17,7 @@ spec:
       - name: celery
         image: $DEPLOYMENT_IMAGE
         command: ["bash"]
-        args: ["-c", "start-flower.sh"]
+        args: ["-c", "/opt/lemur/start-flower.sh"]
         env:
         - name: REDIS_PASSWORD 
           valueFrom:
