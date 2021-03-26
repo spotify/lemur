@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: celery-flower
+  namespace: cert-management 
+  labels:
+    app: lemur
+spec:
+  # Any pods that match these label(s) are considered a part of this Service.
+  selector:
+    app: celery-flower
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    port: 5555 
+    protocol: TCP

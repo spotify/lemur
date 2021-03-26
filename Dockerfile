@@ -52,6 +52,9 @@ RUN cd lemur-plugin-ffwd && pip install . && cd ..
 COPY lemur-plugin-slack lemur-plugin-slack
 RUN cd lemur-plugin-slack && pip install . && cd ..
 
+# install flower
+RUN pip install flower 
+
 # copy static files from builder
 COPY --from=public-lemur /app/lemur/static/dist /opt/lemur/static
 
