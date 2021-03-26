@@ -10,11 +10,11 @@
 
 ## Architecture and components
 
-* [System `certificate-management` in backstage](https://backstage.spotify.net/system/certificate-management/services)
-
-* [GKE namespace `cert-management`](https://ghe.spotify.net/kubernetes/system-resource-manifests/blob/master/manifests/cert-management/namespace.yaml)
+* [System `certificate-management` in backstage](https://backstage.spotify.net/system/certificate-management/services), [celo secrets role `spotifylemur`](https://backstage.spotify.net/services/spotify-lemur/celo)
 
 * [GCP project `xpn-cert-management`](https://console.cloud.google.com/home/dashboard?organizationId=642708779950&project=xpn-cert-management)
+
+* [GKE namespace `cert-management`](https://ghe.spotify.net/kubernetes/system-resource-manifests/blob/master/manifests/cert-management/namespace.yaml)
 
 * Web interface [certs.spotify.net](https://certs.spotify.net) edge-proxy configuration [lemur-perimeter.yaml](https://ghe.spotify.net/edge/edge-control-service/blob/06177be6ca8fa9a376c7b72cbe2582e5c342728d/exposed-services/lemur-perimeter.yaml)
 
@@ -23,8 +23,8 @@
   * [lemur backend](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/lemur-backend/overview?project=gke-xpn-1), serving the backend (containers: lemur, cloudsql-proxy)
   * [lemur-celery-beat](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/lemur-celery-beat?project=gke-xpn-1) scheduler (containers: lemur, cloudsql-proxy)
   * [lemur-celery-worker](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/lemur-celery-worker?project=gke-xpn-1) (containers: lemur, cloudsql-proxy)
-  * [lemur-redis-primary-deployment](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-4133/cert-management/lemur-redis-primary-deployment?project=gke-xpn-1) (containers: redis)
   * [celery-flower](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-j1b3/cert-management/celery-flower?project=gke-xpn-1) (containers: celery)
+  * [lemur-redis-primary-deployment](https://console.cloud.google.com/kubernetes/deployment/europe-west1/europe-west1-4133/cert-management/lemur-redis-primary-deployment?project=gke-xpn-1) (containers: redis)
 
 
 ## Logging and Monitoring
@@ -34,3 +34,56 @@
 * [Celery Flower](https://certs.spotify.net/celery-flower/) - celery task overview
 
 * [Grafana dashboard with ops metrics](https://grafana.spotify.net/d/hlLWwxBGk/lemur)
+
+## Manually viewing and changing the production database content
+
+[xpn-cert-management:europe-west1:lemur](
+https://console.cloud.google.com/sql/instances/lemur/overview?organizationId=642708779950&project=xpn-cert-management) is the production database.
+
+Authentication relies on IAM, so the username/password is `lemur:lemur`.
+
+### Connect using the cloud_sql_proxy
+
+Connect with the [cloud_sql_proxy](https://cloud.google.com/sql/docs/mysql/sql-proxy):
+```
+cloud_sql_proxy -instances=xpn-cert-management:europe-west1:lemur=tcp:5432 &
+```
+And then use a postgresql client, eg:
+```
+psql -h localhost -p 5432 -U lemur
+```
+
+### Connect with gcloud
+
+Run 
+```
+gcloud sql connect lemur --project xpn-cert-management --user lemur
+```
+and you will get a postgres prompt.
+
+### Useful postgres commands
+
+`\?` - help
+
+`\dt` - list tables
+
+`select * from TABLE;` - view content of a table
+
+`\q` - quit
+
+### Deleting a certificate 
+
+To delete a certificate and all references from the database, run these commands, replacing `CERT_ID` with the numerical id of the certificate (eg check with `select id,name,cn from certificates;`):
+
+```
+delete from certificate_associations where certificate_id=CERT_ID>;
+delete from roles_certificates where certificate_id=CERT_ID>;
+delete from logs where certificate_id=CERT_ID>;
+delete from certificates where id=CERT_ID>;
+delete from certificate_destination_associations where certificate_id=CERT_ID>;
+delete from certificate_source_associations where certificate_id=CERT_ID>;
+delete from certificate_notification_associations where certificate_id=CERT_ID>;
+delete from certificate_replacement_associations where certificate_id=CERT_ID>;
+```
+
+Note that the `domains` table might still have entries with the domains the certificate used.
