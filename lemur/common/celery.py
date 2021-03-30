@@ -1202,6 +1202,7 @@ def rotate_endpoint(endpoint_id):
 
     if not endpoint:
         logger.info(f"Skipping rotation,due to {endpoint_id} did not exist")
+        return
 
     old_certificate_id = endpoint.certificate.id
 
