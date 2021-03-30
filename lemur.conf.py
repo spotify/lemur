@@ -157,7 +157,18 @@ LOG_CONFIG_DICT = dict(
         },
         "json": {
             "()": JsonFormatter(
-                fields=["levelname", "name"],
+                fields=[
+                    "levelname",
+                    "name",
+                    "source",
+                    "task_id",
+                    "result",
+                    "certificate",
+                    "certificate_id",
+                    "destination_id",
+                    "destination",
+                    "num_subtasks_created"
+                ],
                 levelname="severity",
                 name="log",
             )

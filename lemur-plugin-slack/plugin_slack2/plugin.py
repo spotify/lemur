@@ -25,7 +25,8 @@ def _send_notification(data):
         json=data)
 
     if not res.ok:
-        logger.error("Failed to send Slack notification {res.text}", extra=res.json())
+        logger.error("Failed to send Slack notification {res.text}",
+            extra=dict(result=res.json()))
 
 
 class SlackNotification(NotificationPlugin):
