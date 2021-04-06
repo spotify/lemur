@@ -256,6 +256,15 @@ CELERYBEAT_SCHEDULE = {
     },
 }
 
+# how many seconds to wait between rotating the certificate on each load balancer
+CELERY_ROTATE_ENDPOINT_SKEW = {
+    "start": 0,  # execute first rotate endpoint task immediately
+    "step": 600,  # wait 10 minutes in between all subsequent rotations
+    "stop": None,  # no maximum waiting time
+}
+
+# how many seconds to wait between attaching a new cert to a load balancer and detaching the old one
+CELERY_ROTATE_ENDPOINT_DELAY_BEFORE_DETACH = 300  # 5 minutes
 
 USE_GCP_CERTIFICATE_NAMES = True
 
