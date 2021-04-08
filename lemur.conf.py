@@ -254,6 +254,20 @@ CELERYBEAT_SCHEDULE = {
         },
         'schedule': crontab(minute="*"), # every minute
     },
+    'report_endpoint_time_to_expiration': {
+        'task': 'lemur.common.celery.report_endpoint_time_to_expiration',
+        'options': {
+            'expires': 180
+        },
+        'schedule': crontab(minute="*/30"), # every 30 minutes
+    },
+    'report_unresolved_pending_certificates_age': {
+        'task': 'lemur.common.celery.report_unresolved_pending_certificates_age',
+        'options': {
+            'expires': 180
+        },
+        'schedule': crontab(minute="*/30"), # every 30 minutes
+    },
 }
 
 # how many seconds to wait between rotating the certificate on each load balancer
