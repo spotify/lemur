@@ -12,80 +12,6 @@ def _get_token():
     return current_app.config.get("SLACK_BOT_TOKEN")
 
 
-ROTATION_TEMPLATE = """
-{
-	"text": null,
-	"channel": "{{ slack }}",
-	"attachments": [{
-			"color": "#db0a0a",
-			"fallback": " ",
-			"blocks": [
-				{
-					"type": "section",
-					"text": {
-						"type": "mrkdwn",
-						"text": "*Certificate Rotation notification*"
-					}
-				},
-				{
-					"type": "divider"
-				},
-				{
-					"type": "section",
-					"text": {
-						"type": "mrkdwn",
-						"text": "*Domain:{{event.data.domain}}*"
-					}
-				},
-				{
-					"type": "section",
-					"text": {
-						"type": "mrkdwn",
-						"text": "*Endpoint:{{event.data.endpoint}}*"
-					}
-				},
-				{
-					"type": "divider"
-				},
-				{
-					"type": "section",
-					"text": {
-						"type": "mrkdwn",
-						"text": "*Old certificate*"
-					}
-				},
-				{
-					"type": "section",
-					"text": {
-						"type": "mrkdwn",
-						"text": "*Validity:*\n{{ event.data.old_cert_validity_start}-{{ event.data.old_cert_validity_end}}"
-					}
-				},
-				{
-					"type": "divider"
-				},
-				{
-					"type": "section",
-					"text": {
-						"type": "mrkdwn",
-						"text": "*New certificate*"
-					}
-				},
-				{
-					"type": "section",
-					"text": {
-						"type": "mrkdwn",
-						"text": "*Validity:*\n{{ event.data.old_cert_validity_start}-{{ event.data.old_cert_validity_end}}"
-					}
-				},
-				{
-					"type": "divider"
-				}
-			]
-}
-"""
-
-
 def _send_notification(data):
     bearer_token = _get_token()
     if not bearer_token:
@@ -108,7 +34,71 @@ def _send_notification(data):
 
 
 def _generate_rotation_notification(endpoint):
-    pass
+
+    slack_channel = "certs-alerts"
+
+	new_cert = endpoint.certificate.replaces[0]
+	old_cert = endpoint.certificate
+
+    return {
+        "text": None,
+        "channel": f"{slack_channel}",
+        "attachments": [
+            {
+                "color": "#db0a0a",
+                "fallback": " ",
+                "blocks": [
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "*Certificate Rotation notification*",
+                        },
+                    },
+                    {"type": "divider"},
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"*Domain:{event.data.domain}*",
+                        },
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "*Endpoint:f{event.data.endpoint}*",
+                        },
+                    },
+                    {"type": "divider"},
+                    {
+                        "type": "section",
+                        "text": {"type": "mrkdwn", "text": "*Old certificate*"},
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"*Validity:*\n{ event.data.old_cert_validity_start}-{ event.data.old_cert_validity_end}",
+                        },
+                    },
+                    {"type": "divider"},
+                    {
+                        "type": "section",
+                        "text": {"type": "mrkdwn", "text": "*New certificate*"},
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"*Validity:*\n{ event.data.old_cert_validity_start}-{ event.data.old_cert_validity_end}",
+                        },
+                    },
+                    {"type": "divider"},
+                ],
+            }
+        ],
+    }
 
 
 class SlackNotification(NotificationPlugin):
