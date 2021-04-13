@@ -52,69 +52,29 @@ def _generate_rotation_notification_attachments(endpoint):
     return [
         {
             "color": "#004c99",
-            "fallback": " ",
+            "fallback": f"Rotating certificate {old_cert.name} to {new_cert.name} on {load_balancer}",
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*Rotating certificate*",
+                        "text": f"Rotating certificate on LB `{load_balancer}` in GCP project `{gcp_project}`",
                     },
                 },
                 {
                     "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"Load balancer: {load_balancer}",
-                    },
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*Old certificate*\nDomains: {old_domains}\nValidity: {old_cert_start_validity} - {old_cert_end_validity}",
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": f"*New certificate*\nDomains: {new_domains}\nValidity: {new_cert_start_validity} - {new_cert_end_validity}",
+                        },
+                    ],
                 },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"Project: {gcp_project}",
-                    },
-                },
-                {"type": "divider"},
-                {
-                    "type": "section",
-                    "text": {"type": "mrkdwn", "text": "*Old certificate*"},
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"Domain(s): {old_domains}",
-                    },
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"Validity: {old_cert_start_validity} - {old_cert_end_validity}",
-                    },
-                },
-                {"type": "divider"},
-                {
-                    "type": "section",
-                    "text": {"type": "mrkdwn", "text": "*New certificate*"},
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"Domain(s): {new_domains}",
-                    },
-                },
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"Validity: {new_cert_start_validity} - {new_cert_end_validity}",
-                    },
-                },
-                {"type": "divider"},
-            ],
+            ]
         }
     ]
 
