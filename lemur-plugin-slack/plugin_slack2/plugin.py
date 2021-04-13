@@ -37,8 +37,16 @@ def _generate_rotation_notification(endpoint):
 
     slack_channel = "certs-alerts"
 
-	new_cert = endpoint.certificate.replaces[0]
-	old_cert = endpoint.certificate
+    new_cert = endpoint.certificate.replaces[0]
+    old_cert = endpoint.certificate
+
+    old_domains = ', '.join([e.name for e in old_cert.domains])
+    new_domains = ', '.join([e.name for e in new_cert.domains])
+
+    gcp_project, load_balancer, _ = endpoint.name.split('/')
+
+    old_cert_start_validity = old_cert.not_before.format('YYYY-MM-DD')
+    old_cert_end_validity = old_cert.not_after.format('YYYY-MM-DD')
 
     return {
         "text": None,
@@ -55,19 +63,11 @@ def _generate_rotation_notification(endpoint):
                             "text": "*Certificate Rotation notification*",
                         },
                     },
-                    {"type": "divider"},
                     {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": f"*Domain:{event.data.domain}*",
-                        },
-                    },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "*Endpoint:f{event.data.endpoint}*",
+                            "text": f"*Load balancer:*\n{load_balancer} (project: {gcp_project})",
                         },
                     },
                     {"type": "divider"},
@@ -79,13 +79,27 @@ def _generate_rotation_notification(endpoint):
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": f"*Validity:*\n{ event.data.old_cert_validity_start}-{ event.data.old_cert_validity_end}",
+                            "text": f"*Domain(s)*:\n{old_domains}",
+                        },
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"*Validity:*\n{ old_cert.}-{ event.data.old_cert_validity_end}",
                         },
                     },
                     {"type": "divider"},
                     {
                         "type": "section",
                         "text": {"type": "mrkdwn", "text": "*New certificate*"},
+                    },
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"*Domain(s)*:\n{new_domains}",
+                        },
                     },
                     {
                         "type": "section",
