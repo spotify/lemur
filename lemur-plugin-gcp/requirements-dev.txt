@@ -1,4 +1,4 @@
 -r requirements-lint.txt
 -r requirements-test.txt
 
-tox~=3.21
+tox~=3.23
