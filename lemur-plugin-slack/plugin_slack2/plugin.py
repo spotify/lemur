@@ -33,86 +33,83 @@ def _send_notification(data):
         )
 
 
-def _generate_rotation_notification(endpoint):
-
-    slack_channel = "certs-alerts"
+def _generate_rotation_notification_attachments(endpoint):
 
     new_cert = endpoint.certificate.replaces[0]
     old_cert = endpoint.certificate
 
-    old_domains = ', '.join([e.name for e in old_cert.domains])
-    new_domains = ', '.join([e.name for e in new_cert.domains])
+    old_domains = ", ".join([e.name for e in old_cert.domains])
+    new_domains = ", ".join([e.name for e in new_cert.domains])
 
-    gcp_project, load_balancer, _ = endpoint.name.split('/')
+    gcp_project, load_balancer, _ = endpoint.name.split("/")
 
-    old_cert_start_validity = old_cert.not_before.format('YYYY-MM-DD')
-    old_cert_end_validity = old_cert.not_after.format('YYYY-MM-DD')
+    old_cert_start_validity = old_cert.not_before.format("YYYY-MM-DD")
+    old_cert_end_validity = old_cert.not_after.format("YYYY-MM-DD")
 
-    return {
-        "text": None,
-        "channel": f"{slack_channel}",
-        "attachments": [
-            {
-                "color": "#db0a0a",
-                "fallback": " ",
-                "blocks": [
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "*Certificate Rotation notification*",
-                        },
+    new_cert_start_validity = new_cert.not_before.format("YYYY-MM-DD")
+    new_cert_end_validity = new_cert.not_after.format("YYYY-MM-DD")
+
+    return [
+        {
+            "color": "#db0a0a",
+            "fallback": " ",
+            "blocks": [
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "*Certificate Rotation notification*",
                     },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": f"*Load balancer:*\n{load_balancer} (project: {gcp_project})",
-                        },
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*Load balancer:*\n{load_balancer} (project: {gcp_project})",
                     },
-                    {"type": "divider"},
-                    {
-                        "type": "section",
-                        "text": {"type": "mrkdwn", "text": "*Old certificate*"},
+                },
+                {"type": "divider"},
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": "*Old certificate*"},
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*Domain(s)*:\n{old_domains}",
                     },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": f"*Domain(s)*:\n{old_domains}",
-                        },
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*Validity:*\n{old_cert_start_validity}-{old_cert_end_validity}",
                     },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": f"*Validity:*\n{ old_cert.}-{ event.data.old_cert_validity_end}",
-                        },
+                },
+                {"type": "divider"},
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": "*New certificate*"},
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*Domain(s)*:\n{new_domains}",
                     },
-                    {"type": "divider"},
-                    {
-                        "type": "section",
-                        "text": {"type": "mrkdwn", "text": "*New certificate*"},
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"*Validity:*\n{new_cert_start_validity}-{new_cert_end_validity}",
                     },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": f"*Domain(s)*:\n{new_domains}",
-                        },
-                    },
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": f"*Validity:*\n{ event.data.old_cert_validity_start}-{ event.data.old_cert_validity_end}",
-                        },
-                    },
-                    {"type": "divider"},
-                ],
-            }
-        ],
-    }
+                },
+                {"type": "divider"},
+            ],
+        }
+    ]
 
 
 class SlackNotification(NotificationPlugin):
@@ -135,9 +132,9 @@ class SlackNotification(NotificationPlugin):
     def send_rotation_notification(channel, message, endpoint):
         logger.info(f"Sending rotation notification: {channel} {message} {endpoint}")
 
-        data = _generate_rotation_notification(endpoint)
+        attachments = _generate_rotation_notification_attachments(endpoint)
 
-        _send_notification(dict(channel=channel, text=data))
+        _send_notification(dict(channel=channel, attachments=attachments))
 
     @staticmethod
     def send(
