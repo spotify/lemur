@@ -35,7 +35,7 @@ def _send_notification(data):
 
 def _generate_rotation_notification_attachments(endpoint):
 
-    new_cert = endpoint.certificate.replaces[0]
+    new_cert = endpoint.certificate.replaced[0]
     old_cert = endpoint.certificate
 
     old_domains = ", ".join([e.name for e in old_cert.domains])
@@ -51,21 +51,28 @@ def _generate_rotation_notification_attachments(endpoint):
 
     return [
         {
-            "color": "#db0a0a",
+            "color": "#004c99",
             "fallback": " ",
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*Certificate Rotation notification*",
+                        "text": "*Rotating certificate*",
                     },
                 },
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*Load balancer:*\n{load_balancer} (project: {gcp_project})",
+                        "text": f"Load balancer: {load_balancer}",
+                    },
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"Project: {gcp_project}",
                     },
                 },
                 {"type": "divider"},
@@ -77,14 +84,14 @@ def _generate_rotation_notification_attachments(endpoint):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*Domain(s)*:\n{old_domains}",
+                        "text": f"Domain(s): {old_domains}",
                     },
                 },
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*Validity:*\n{old_cert_start_validity}-{old_cert_end_validity}",
+                        "text": f"Validity: {old_cert_start_validity} - {old_cert_end_validity}",
                     },
                 },
                 {"type": "divider"},
@@ -96,14 +103,14 @@ def _generate_rotation_notification_attachments(endpoint):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*Domain(s)*:\n{new_domains}",
+                        "text": f"Domain(s): {new_domains}",
                     },
                 },
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*Validity:*\n{new_cert_start_validity}-{new_cert_end_validity}",
+                        "text": f"Validity: {new_cert_start_validity} - {new_cert_end_validity}",
                     },
                 },
                 {"type": "divider"},
