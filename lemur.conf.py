@@ -219,40 +219,48 @@ CELERY_TIMEZONE = "UTC"
 CELERYD_HIJACK_ROOT_LOGGER = False if LOG_CONFIG_DICT else True
 
 CELERYBEAT_SCHEDULE = {
-    'fetch_all_pending_certs': {
-        'task': 'lemur.common.celery.fetch_all_pending_certs',
-        'options': {
-            'expires': 180
-        },
-        'schedule': crontab(minute="*/5"), # every 5 minutes
-    },
     'certificate_reissue': {
         'task': 'lemur.common.celery.certificate_reissue',
         'options': {
             'expires': 180
         },
-        'schedule': crontab(minute="20"), # every hour
-    },
-    'certificate_destination_check': {
-        'task': 'lemur.common.celery.create_certificate_check_destination_tasks',
-        'options': {
-            'expires': 180
-        },
-        'schedule': crontab(minute="*/5"), # every 5 minutes
-    },
-    'sync_all_sources': {
-        'task': 'lemur.common.celery.sync_all_sources',
-        'options': {
-            'expires': 180
-        },
-        'schedule': crontab(minute="*/5"), # every 5 minutes
+        'schedule': crontab(
+            day_of_week='mon-thu', 
+            hour="11", 
+            minute="00"
+        ), # 13:00 CEST on Mon,Tue,Wed,Thu
     },
     'rotate_all_pending_endpoints': {
         'task': 'lemur.common.celery.rotate_all_pending_endpoints',
         'options': {
             'expires': 180
         },
-        'schedule': crontab(minute="*"), # every minute
+        'schedule': crontab(
+            day_of_week='mon-thu', 
+            hour="12", 
+            minute="00"
+        ), # 14:00 CEST on Mon,Tue,Wed,Thu
+    },
+    'fetch_all_pending_certs': {
+        'task': 'lemur.common.celery.fetch_all_pending_certs',
+        'options': {
+            'expires': 180
+        },
+        'schedule': crontab(minute="*/10"), # every 10 minutes
+    },
+    'certificate_destination_check': {
+        'task': 'lemur.common.celery.create_certificate_check_destination_tasks',
+        'options': {
+            'expires': 180
+        },
+        'schedule': crontab(minute="*/10"), # every 10 minutes
+    },
+    'sync_all_sources': {
+        'task': 'lemur.common.celery.sync_all_sources',
+        'options': {
+            'expires': 180
+        },
+        'schedule': crontab(minute="*/10"), # every 10 minutes
     },
     'report_endpoint_time_to_expiration': {
         'task': 'lemur.common.celery.report_endpoint_time_to_expiration',
