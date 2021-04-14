@@ -35,7 +35,7 @@
 
 * [Grafana dashboard with ops metrics](https://grafana.spotify.net/d/hlLWwxBGk/lemur)
 
-## Manually viewing and changing the production database content
+## Database - manually viewing and changing the production database content
 
 [xpn-cert-management:europe-west1:lemur](
 https://console.cloud.google.com/sql/instances/lemur/overview?organizationId=642708779950&project=xpn-cert-management) is the production database.
@@ -87,3 +87,17 @@ delete from certificate_replacement_associations where certificate_id=CERT_ID;
 ```
 
 Note that the `domains` table might still have entries with the domains the certificate used.
+
+## Celery Tasks
+
+The [Celery Beat schedule is defined in lemur.conf.py](https://ghe.spotify.net/wasabi/spotify-lemur/blob/master/lemur.conf.py#L221).
+
+Tasks can be inpsected with celery-flower on https://certs.spotify.net/celery-flower.
+
+### Manually triggering a celery task
+
+1. Use `kubectx` to make sure you're in the `gke_gke-xpn-1_europe-west1_europe-west1-j1b3` context.
+1. Run `kubectl get pods --namespace cert-management` to find out the name of the currently running celery beat pod name.
+1. Run `kubectl exec $LEMUR_CELERY_BEAT_POD_NAME celery -- celery -A lemur.common.celery call lemur.common.celery.$TASK_NAME` to run the task $TASK_NAME, so for example `kubectl exec lemur-celery-beat-7cc6d47c4f-qqbkh celery -- celery -A lemur.common.celery call lemur.common.celery.fetch_all_pending_certs`
+
+You will see some log output of lemur/celery starting (a couple of "Skip loading plugin.." messages) and finally a task id. You can check with [celery flower](https://certs.spotify.net/celery-flower) that the task succeeded. 
