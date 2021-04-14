@@ -57,7 +57,7 @@ class Gcp:
         request = self.client.sslCertificates().list(project=self.project)
         while request is not None:
             response = request.execute()
-            certificates.extend(response["items"])
+            certificates.extend(response.get("items", []))
             request = self.client.sslCertificates().list_next(
                 previous_request=request, previous_response=response
             )
@@ -115,7 +115,7 @@ class Gcp:
         request = self.client.targetHttpsProxies().list(project=self.project)
         while request is not None:
             response = request.execute()
-            lbs.extend(response["items"])
+            lbs.extend(response.get("items", []))
 
             request = self.client.targetHttpsProxies().list_next(
                 previous_request=request, previous_response=response
@@ -125,7 +125,7 @@ class Gcp:
         request = self.client.targetSslProxies().list(project=self.project)
         while request is not None:
             response = request.execute()
-            lbs.extend(response["items"])
+            lbs.extend(response.get("items", []))
 
             request = self.client.targetSslProxies().list_next(
                 previous_request=request, previous_response=response
