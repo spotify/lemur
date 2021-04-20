@@ -218,6 +218,10 @@ CELERY_IMPORTS = "lemur.common.celery"
 CELERY_TIMEZONE = "UTC"
 CELERYD_HIJACK_ROOT_LOGGER = False if LOG_CONFIG_DICT else True
 
+# increase visibility timeout (should be longer than longest skew-chain)
+# see: https://docs.celeryproject.org/en/2.2/getting-started/brokers/redis.html#visibility-timeout
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 21600}  # 6 hours
+
 CELERYBEAT_SCHEDULE = {
     'certificate_reissue': {
         'task': 'lemur.common.celery.certificate_reissue',
