@@ -52,6 +52,16 @@ class GcpSource(SourcePlugin):
 
         return list(reversed(certs))
 
+    def get_certificate_by_name(self, certificate_name, options, **kwargs):
+        client = get_gcp_client_from_options(options)
+        gcp_cert = client.get_ssl_certificate_by_name(certificate_name)
+        body, *chain = pem.parse(gcp_cert["certificate"].encode("utf-8"))
+        return dict(
+            body=body.as_text(),
+            chain="".join(map(lambda c: c.as_text(), chain)),
+            name=gcp_cert["name"],
+        )
+
     def get_endpoints(self, options, **kwargs):
         client = get_gcp_client_from_options(options)
         endpoints = []
