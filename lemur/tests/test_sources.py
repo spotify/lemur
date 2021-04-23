@@ -41,6 +41,35 @@ def test_create_certificate(user, source):
     assert cert.notifications
 
 
+def test_sync_certificates(user, source, sync_source_plugin):
+    from lemur.sources.service import sync_certificates, certificate_create
+    from lemur.certificates import service as cert_service
+    from lemur.plugins.base import plugins
+
+    # create an existing cert with same body
+    data = {
+        "body": WILDCARD_CERT_STR,
+        "private_key": WILDCARD_CERT_KEY,
+        "owner": "bob@example.com",
+        "creator": user["user"],
+    }
+    certificate_create(data, source)
+
+    # sync a certificate with same body
+    s = plugins.get(source.plugin_name)
+    s.certificates = [
+        {
+            "name": "yakuniku",
+            "body": WILDCARD_CERT_STR,
+        },
+    ]
+
+    res = sync_certificates(source, user["user"])
+
+    assert res == (1, 0, 1)
+    assert cert_service.get_by_name("yakuniku") is not None
+
+
 @pytest.mark.parametrize(
     "token,status",
     [
