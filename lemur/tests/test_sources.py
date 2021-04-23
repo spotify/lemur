@@ -67,7 +67,7 @@ def test_sync_certificates_same_cert_different_name(user, source, sync_source_pl
 
     res = sync_certificates(source, user["user"])
 
-    assert res == (1, 0, 1)
+    assert res == (1, 0, 0)
     assert cert_service.get_by_name("WildcardCert1") is not None
 
 
@@ -97,7 +97,7 @@ def test_sync_certificates_same_cert_same_name(user, source, sync_source_plugin)
 
     res = sync_certificates(source, user["user"])
 
-    assert res == (0, 1, 0)
+    assert res == (0, 1, 1)
     assert cert_service.get_by_name("WildcardCert2") is not None
 
 

@@ -172,29 +172,29 @@ def sync_endpoints(source):
 
 
 def find_cert(certificate):
-    updated_by_hash = 0
     exists = False
 
-    if certificate.get("search", None):
-        conditions = certificate.pop("search")
-        exists = certificate_service.get_by_attributes(conditions)
+    # if certificate.get("search", None):
+    #     conditions = certificate.pop("search")
+    #     exists = certificate_service.get_by_attributes(conditions)
 
     if not exists and certificate.get("name"):
         result = certificate_service.get_by_name(certificate["name"])
         if result:
             exists = [result]
 
-    if not exists and certificate.get("serial"):
-        exists = certificate_service.get_by_serial(certificate["serial"])
+    # if not exists and certificate.get("serial"):
+    #     exists = certificate_service.get_by_serial(certificate["serial"])
 
     if not exists:
-        cert = parse_certificate(certificate["body"])
-        matching_serials = certificate_service.get_by_serial(serial(cert))
-        exists = find_matching_certificates_by_hash(cert, matching_serials)
-        updated_by_hash += 1
+        return False, 0
 
-    exists = [x for x in exists if x]
-    return exists, updated_by_hash
+    # filter out certs that does not match by hash
+    cert = parse_certificate(certificate["body"])
+    exists = find_matching_certificates_by_hash(cert, exists)
+    if not exists:
+        raise Exception("Name already taken!")
+    return exists, len(exists)
 
 
 # TODO this is very slow as we don't batch update certificates
