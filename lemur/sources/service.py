@@ -172,28 +172,21 @@ def sync_endpoints(source):
 
 
 def find_cert(certificate):
-    exists = False
-
-    # if certificate.get("search", None):
-    #     conditions = certificate.pop("search")
-    #     exists = certificate_service.get_by_attributes(conditions)
-
-    if not exists and certificate.get("name"):
-        result = certificate_service.get_by_name(certificate["name"])
-        if result:
-            exists = [result]
-
-    # if not exists and certificate.get("serial"):
-    #     exists = certificate_service.get_by_serial(certificate["serial"])
-
-    if not exists:
+    if not certificate.get("name"):
+        # certificate must have a name
         return False, 0
 
-    # filter out certs that does not match by hash
+    matched_cert = certificate_service.get_by_name(certificate["name"])
+    if not matched_cert:
+        # no cert with the same name found
+        return False, 0
+
+    # check hash of matched cert
     cert = parse_certificate(certificate["body"])
-    exists = find_matching_certificates_by_hash(cert, exists)
+    exists = find_matching_certificates_by_hash(cert, [matched_cert])
     if not exists:
-        raise Exception("Name already taken!")
+        raise Exception("A certificate with the same name already exists with a different hash")
+
     return exists, len(exists)
 
 
