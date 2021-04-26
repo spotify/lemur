@@ -1,6 +1,6 @@
 #!/bin/bash
 
-flower \
+python /opt/lemur/celery_flower.py \
   --debug=True \
   --url_prefix=celery-flower \
   --auth=.*@spotify\.com \
