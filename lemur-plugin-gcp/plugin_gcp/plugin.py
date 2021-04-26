@@ -41,6 +41,10 @@ class GcpSource(SourcePlugin):
 
         certs = []
         for item in response:
+            if item["type"] == "MANAGED":
+                # skip certificates managed by Google
+                continue
+
             body, *chain = pem.parse(item["certificate"].encode("utf-8"))
             certs.append(
                 dict(
