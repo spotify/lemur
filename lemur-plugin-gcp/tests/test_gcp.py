@@ -82,11 +82,14 @@ def test_create_certificate(get_gcp_client):
         test_folder / "assets/create_cert_response.json"
     ).read_text()
 
+    operation_response = (test_folder / "assets/operation_response.json").read_text()
+
     # Create the client
     client = get_gcp_client(
         responses=[
             ({"status": "404"}, "certificate does not exist"),
             ({"status": "200"}, create_cert_response),
+            ({"status": "200"}, operation_response),
         ],
     )
 

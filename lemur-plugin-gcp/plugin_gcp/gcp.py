@@ -1,4 +1,5 @@
 import logging
+import time
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -63,6 +64,31 @@ class Gcp:
             )
         return certificates
 
+    def _wait_for_operation(self, operation, max_time=10.0):
+        """Wait until operation is successful by polling. If the operation fails this method
+        throws an exception."""
+        start = time.time()
+        res = {}
+        while True:
+            if time.time() - start >= max_time:
+                raise Exception(
+                    f"Operation didn't finish within max_time ({max_time}s)."
+                )
+
+            res = (
+                self.client.globalOperations()
+                .get(project=self.project, operation=operation)
+                .execute()
+            )
+            if res["status"] == "DONE":
+                break
+
+            time.sleep(1)
+
+        if "error" in res:
+            # grab the first error, which hopefully should always exist
+            raise Exception(res["error"]["errors"][0]["message"])
+
     def upload_ssl_certificate(self, certificate_name, cert, private_key, cert_chain):
         """Upload a certificate to GCP. If the certificate is already uploaded under
         the same name this function returns the resource URI for the existing certificate."""
@@ -104,7 +130,11 @@ class Gcp:
         request = self.client.sslCertificates().insert(
             project=self.project, body=ssl_certificate_body
         )
+
+        # response is an operation, wait for it to finish
         response = request.execute()
+        self._wait_for_operation(response["name"])
+
         return response["targetLink"]
 
     def get_load_balancers(self):
