@@ -101,3 +101,16 @@ Tasks can be inpsected with celery-flower on https://certs.spotify.net/celery-fl
 1. Run `kubectl exec $LEMUR_CELERY_BEAT_POD_NAME celery -- celery -A lemur.common.celery call lemur.common.celery.$TASK_NAME` to run the task $TASK_NAME, so for example `kubectl exec lemur-celery-beat-7cc6d47c4f-qqbkh celery -- celery -A lemur.common.celery call lemur.common.celery.fetch_all_pending_certs`
 
 You will see some log output of lemur/celery starting (a couple of "Skip loading plugin.." messages) and finally a task id. You can check with [celery flower](https://certs.spotify.net/celery-flower) that the task succeeded. 
+
+## Onboarding a new project (destination/source) - IAM permissions
+
+When adding a GCP project as a new destination and source in Lemur, the Lemur service account needs IAM permissions in that project to operate on it. 
+
+On the [IAM page](https://console.cloud.google.com/iam-admin/iam) of the GCP project that will be onboarded, add the following binding: 
+- Member: `cert-management@gke-accounts.iam.gserviceaccount.com`
+- Role: `Compute Load Balancer Admin`
+
+Or using gsutil in a terminal, run:
+```
+gcloud projects add-iam-policy-binding <project> --member serviceAccount:cert-management@gke-accounts.iam.gserviceaccount.com --role roles/compute.loadBalancerAdmin
+```
