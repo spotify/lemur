@@ -710,7 +710,7 @@ def sync_source_destination():
     return log_data
 
 
-@celery.task(soft_time_limit=3600, autoretry_for=(Exception,), default_retry_delay=10 * 60, retry_kwargs={'max_retries': 6})
+@celery.task(soft_time_limit=3600, autoretry_for=(Exception,), default_retry_delay=10*60, max_retries=6)
 def certificate_reissue():
     """
     This celery task reissues certificates which are pending reissue
@@ -1196,8 +1196,8 @@ def send_notifications(notifications, notification_type, message, **kwargs):
         )
 
 
-@celery.task(soft_time_limit=60)
-def rotate_endpoint(endpoint_id, **kwargs):
+@celery.task(bind=True, soft_time_limit=60, autoretry_for=(Exception,), default_retry_delay=10*60, max_retries=6)
+def rotate_endpoint(self, endpoint_id, **kwargs):
     function = f"{__name__}.{sys._getframe().f_code.co_name}"
     logger = logging.getLogger(function)
 
@@ -1227,7 +1227,8 @@ def rotate_endpoint(endpoint_id, **kwargs):
     send_notifications(
         list(set(endpoint.certificate.notifications + new_cert.notifications)),
         "rotation",
-        f"Rotating endpoint {endpoint.name}",
+        # TODO: EMPTY MESSAGE IF NOT RETRYING!!
+        f"Rotating endpoint {endpoint.name} retry: {self.request.retries}/{self.request.max_retries}",
         endpoint=endpoint,
     )
 
