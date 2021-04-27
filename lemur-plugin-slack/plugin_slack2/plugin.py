@@ -1,5 +1,6 @@
 import logging
 
+import backoff
 import requests
 from flask import current_app
 from lemur.plugins.base import Plugin
@@ -12,6 +13,7 @@ def _get_token():
     return current_app.config.get("SLACK_BOT_TOKEN")
 
 
+@backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=10)
 def _send_notification(data):
     bearer_token = _get_token()
     if not bearer_token:
@@ -109,10 +111,13 @@ class SlackNotification(NotificationPlugin):
     ):
         channel = Plugin.get_option("channel", options)
 
-        if notification_type == "rotation":
-            if endpoint is None:
-                logger.warning("Received rotation notification but endpoint was None")
-                return
-            return SlackNotification.send_rotation_notification(
-                channel, message, endpoint
-            )
+        try:
+            if notification_type == "rotation":
+                if endpoint is None:
+                    logger.warning("Received rotation notification but endpoint was None")
+                    return
+                return SlackNotification.send_rotation_notification(
+                    channel, message, endpoint
+                )
+        except Exception as e:
+            logger.warning(f"Failed to send Slack notification: {e}")
