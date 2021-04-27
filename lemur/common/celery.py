@@ -710,7 +710,7 @@ def sync_source_destination():
     return log_data
 
 
-@celery.task(soft_time_limit=3600)
+@celery.task(soft_time_limit=3600, autoretry_for=(Exception,), default_retry_delay=10 * 60, retry_kwargs={'max_retries': 6})
 def certificate_reissue():
     """
     This celery task reissues certificates which are pending reissue
