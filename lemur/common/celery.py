@@ -1224,7 +1224,7 @@ def rotate_endpoint(self, endpoint_id, **kwargs):
     new_cert_name = new_cert.name
 
     if self.request.retries > 0:
-        extra_message = f"retry {self.request.retries} of {self.request.max_retries}"
+        extra_message = f"retry {self.request.retries} of {self.max_retries}"
     else:
         extra_message = None
 
@@ -1260,7 +1260,7 @@ def rotate_endpoint_remove_cert(self, endpoint_id, certificate_id):
     logger = logging.getLogger(function)
 
     if self.request.retries > 0:
-        logger.warning(f"Retrying rotate_endpoint_remove_cert task as it failed before (retry {self.request.retries} of {self.request.max_retries})")
+        logger.warning(f"Retrying rotate_endpoint_remove_cert task as it failed before (retry {self.request.retries} of {self.max_retries})")
 
     endpoint = endpoint_service.get(endpoint_id)
     certificate = certificate_service.get(certificate_id)
