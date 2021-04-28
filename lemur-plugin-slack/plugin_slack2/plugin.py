@@ -35,8 +35,7 @@ def _send_notification(data):
         )
 
 
-def _generate_rotation_notification_attachments(endpoint):
-
+def _generate_rotation_notification_attachments(endpoint, extra_message=None):
     new_cert = endpoint.certificate.replaced[0]
     old_cert = endpoint.certificate
 
@@ -51,16 +50,20 @@ def _generate_rotation_notification_attachments(endpoint):
     new_cert_start_validity = new_cert.not_before.format("YYYY-MM-DD")
     new_cert_end_validity = new_cert.not_after.format("YYYY-MM-DD")
 
+    message = f"Rotating certificate on LB `{load_balancer}` in GCP project `{gcp_project}`"
+    if extra_message:
+        message += f": {extra_message}"
+
     return [
         {
             "color": "#004c99",
-            "fallback": f"Rotating certificate {old_cert.name} to {new_cert.name} on {load_balancer}",
+            "fallback": message,
             "blocks": [
                 {
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"Rotating certificate on LB `{load_balancer}` in GCP project `{gcp_project}`",
+                        "text": message,
                     },
                 },
                 {
@@ -101,7 +104,7 @@ class SlackNotification(NotificationPlugin):
     def send_rotation_notification(channel, message, endpoint):
         logger.info(f"Sending rotation notification: {channel} {message} {endpoint}")
 
-        attachments = _generate_rotation_notification_attachments(endpoint)
+        attachments = _generate_rotation_notification_attachments(endpoint, extra_message=message)
 
         _send_notification(dict(channel=channel, attachments=attachments))
 
