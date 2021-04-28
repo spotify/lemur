@@ -497,7 +497,7 @@ def remove_old_acme_certs():
 
 @celery.task()
 def fetch_all_pending_certs():
-    """Instantiate celery workers to resolve all  certificates"""
+    """Instantiate celery workers to resolve all certificates"""
 
     function = f"{__name__}.{sys._getframe().f_code.co_name}"
     task_id = None
@@ -1283,7 +1283,7 @@ def rotate_endpoint_remove_cert(self, endpoint_id, certificate_id):
 
 @celery.task(soft_time_limit=60)
 def rotate_all_pending_endpoints():
-    """"""
+    """."""
     function = f"{__name__}.{sys._getframe().f_code.co_name}"
     logger = logging.getLogger(function)
     task_id = None
