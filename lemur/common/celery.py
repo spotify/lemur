@@ -278,13 +278,19 @@ def fetch_cert(id):
     for cert in pending_certs:
         cert_authority = get_authority(cert.authority_id)
         if cert_authority.plugin_name == "acme-issuer":
-            current_app.log.warning(
+            current_app.logger.warning(
                 "Skipping acme cert (use `fetch_acme_cert()` instead)."
             )
             continue
         plugin = plugins.get(cert_authority.plugin_name)
         real_cert = plugin.get_ordered_certificate(cert)
         if real_cert:
+            # check if cert already resolved (eg. while waiting for API calls above)
+            pending_cert = pending_certificate_service.get(id)
+            if pending_cert and pending_cert.resolved:
+                current_app.logger.warning("")
+                continue
+
             # If a real certificate was returned from issuer, then create it in
             # Lemur and mark the pending certificate as resolved
             final_cert = pending_certificate_service.create_certificate(
