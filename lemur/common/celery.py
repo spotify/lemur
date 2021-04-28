@@ -288,11 +288,12 @@ def fetch_cert(id):
             # check if cert already resolved (eg. while waiting for API calls above)
             pending_cert = pending_certificate_service.get(id)
             if pending_cert and pending_cert.resolved:
-                current_app.logger.warning("")
+                current_app.logger.warning(f"Pending certificate: {id} has already been resolved.")
                 continue
 
             # If a real certificate was returned from issuer, then create it in
             # Lemur and mark the pending certificate as resolved
+            # TODO: Turn into a transaction inside create_certificate()
             final_cert = pending_certificate_service.create_certificate(
                 cert, real_cert, cert.user
             )
