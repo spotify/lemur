@@ -285,15 +285,10 @@ def fetch_cert(id):
         plugin = plugins.get(cert_authority.plugin_name)
         real_cert = plugin.get_ordered_certificate(cert)
         if real_cert:
-            # check if cert already resolved (eg. while waiting for API calls above)
-            pending_cert = pending_certificate_service.get(id)
-            if pending_cert and pending_cert.resolved:
-                current_app.logger.warning(f"Pending certificate: {id} has already been resolved.")
-                continue
-
             # If a real certificate was returned from issuer, then create it in
             # Lemur and mark the pending certificate as resolved
-            # TODO: Turn into a transaction inside create_certificate()
+            # Ideally, this should be a db transaction that would check resolved status
+            # before creating a new one
             final_cert = pending_certificate_service.create_certificate(
                 cert, real_cert, cert.user
             )

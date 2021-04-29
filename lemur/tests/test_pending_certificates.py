@@ -59,6 +59,27 @@ def test_create_pending(pending_certificate, user, session):
     assert real_cert.authority_id == pending_certificate.authority_id
 
 
+def test_create_pending_already_resolved(pending_certificate, user, session):
+    import copy
+    from lemur.pending_certificates.service import create_certificate, get
+
+    cert = {
+        "body": WILDCARD_CERT_STR,
+        "chain": INTERMEDIATE_CERT_STR,
+        "external_id": "54321",
+    }
+
+    # Weird copy because the session behavior.  pending_certificate is a valid object but the
+    # return of vars(pending_certificate) is a sessionobject, and so nothing from the pending_cert
+    # is used to create the certificate.  Maybe a bug due to using vars(), and should copy every
+    # field explicitly.
+    pending_certificate = copy.copy(get(pending_certificate.id))
+    first_cert = create_certificate(pending_certificate, cert, user["user"])
+    second_cert = create_certificate(pending_certificate, cert, user["user"])
+
+    assert first_cert.id == second_cert.id
+
+
 @pytest.mark.parametrize(
     "token,status",
     [

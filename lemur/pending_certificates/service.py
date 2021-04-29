@@ -99,6 +99,12 @@ def create_certificate(pending_certificate, certificate, user):
         user: User that called this function, used as 'creator' of the certificate if it does
               not have an owner
     """
+    # check if the pending_certificate already has been resolved, in that case return
+    # existing certificate
+    maybe_resolved_cert = get(pending_certificate.id)
+    if maybe_resolved_cert and maybe_resolved_cert.resolved:
+        return maybe_resolved_cert
+
     certificate["owner"] = pending_certificate.owner
     data, errors = CertificateUploadInputSchema().load(certificate)
     if errors:
