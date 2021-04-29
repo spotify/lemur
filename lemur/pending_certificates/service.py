@@ -102,8 +102,8 @@ def create_certificate(pending_certificate, certificate, user):
     # check if the pending_certificate already has been resolved, in that case return
     # existing certificate
     maybe_resolved_cert = get(pending_certificate.id)
-    if maybe_resolved_cert and maybe_resolved_cert.resolved:
-        return maybe_resolved_cert
+    if maybe_resolved_cert and maybe_resolved_cert.resolved and maybe_resolved_cert.resolved_cert_id:
+        return certificate_service.get(maybe_resolved_cert.resolved_cert_id)
 
     certificate["owner"] = pending_certificate.owner
     data, errors = CertificateUploadInputSchema().load(certificate)

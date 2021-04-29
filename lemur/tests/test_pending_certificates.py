@@ -61,7 +61,7 @@ def test_create_pending(pending_certificate, user, session):
 
 def test_create_pending_already_resolved(pending_certificate, user, session):
     import copy
-    from lemur.pending_certificates.service import create_certificate, get
+    from lemur.pending_certificates.service import create_certificate, get, update
 
     cert = {
         "body": WILDCARD_CERT_STR,
@@ -69,12 +69,12 @@ def test_create_pending_already_resolved(pending_certificate, user, session):
         "external_id": "54321",
     }
 
-    # Weird copy because the session behavior.  pending_certificate is a valid object but the
-    # return of vars(pending_certificate) is a sessionobject, and so nothing from the pending_cert
-    # is used to create the certificate.  Maybe a bug due to using vars(), and should copy every
-    # field explicitly.
     pending_certificate = copy.copy(get(pending_certificate.id))
     first_cert = create_certificate(pending_certificate, cert, user["user"])
+
+    # mark resolved on pending_certificate
+    update(pending_certificate.id, resolved_cert_id=first_cert.id)
+    update(pending_certificate.id, resolved=True)
     second_cert = create_certificate(pending_certificate, cert, user["user"])
 
     assert first_cert.id == second_cert.id
