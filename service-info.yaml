@@ -7,7 +7,7 @@ description: lemur - Spotify glue for lemur, TLS certificate management
 system: certificate-management
 
 # Main owner of this component (LDAP group or individual):
-owner: wasabi
+owner: atc
 
 # Intended usage of this component:
 #   'private' - only for use by the owner
@@ -25,21 +25,21 @@ dependencies: []
 facts:
   # Links to the latest definitive documentation for this service.
   # Markdown is supported, e.g. docs: '[Title] (URL)'
-  docs: '[Docs on GHE](https://ghe.spotify.net/wasabi/spotify-lemur)'
+  docs: '[Docs on GHE](https://ghe.spotify.net/atc/spotify-lemur)'
 
   # Name of the slack channel that users should use to get support.
-  slack_channel: wasabi
+  slack_channel: atc
 
   # Email that users should use to get support.
-  support_email: wasabi@spotify.com
+  support_email: atc@spotify.com
 
   # Lifecycle is a new experimental feature
   # we prefer one of: experimental, production, deprecated, removed
-  lifecycle: experimental
+  lifecycle: production
 
   helios_agent: false
 
   role: spotifylemur
 
   # Email for MMA alerting
-  alert_email: wasabi+spotify-lemur@spotify.com
+  alert_email: atc-private+spotify-lemur@spotify.com
