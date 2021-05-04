@@ -43,3 +43,5 @@ facts:
 
   # Email for MMA alerting
   alert_email: atc-private+spotify-lemur@spotify.com
+
+  service_tier: 1
