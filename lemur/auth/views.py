@@ -404,7 +404,15 @@ class Login(Resource):
 
     def __init__(self):
         self.reqparse = reqparse.RequestParser()
+        self.password_login_allowed = current_app.config.get("PASSWORD_LOGIN_ALLOWED")
         super().__init__()
+
+    def deny_login(self, username=None):
+        if self.password_login_allowed:
+            if username in self.password_login_allowed:
+                return False
+            return True
+        return False
 
     @limiter.limit("10/5minute")
     def post(self):
@@ -448,6 +456,9 @@ class Login(Resource):
         self.reqparse.add_argument("password", type=str, required=True, location="json")
 
         args = self.reqparse.parse_args()
+
+        if self.deny_login(args["username"]):
+            return dict(message="The supplied username is not allowed to login with username/password"), 403
 
         if "@" in args["username"]:
             user = user_service.get_by_email(args["username"])
