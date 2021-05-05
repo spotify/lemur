@@ -259,6 +259,19 @@ def get_cis_certificate(session, base_url, order_id):
     return cert_chain_pem
 
 
+@retry(stop_max_attempt_number=3, wait_fixed=1000)
+def get_order_id(session, base_url, digicert_cert_id):
+    """Look up the digicert order id for a certificate."""
+    url = f"{base_url}/services/v2/order/certificate?filters[certificate_id]={digicert_cert_id}"
+    response_data = handle_response(session.get(url))
+
+    orders = response_data["orders"]
+    if len(orders) != 1:
+        raise ValueError(f"Got {len(orders)} orders but expected one.")
+    
+    return response_data["orders"][0]["id"]
+
+
 class DigiCertSourcePlugin(SourcePlugin):
     """Wrap the Digicert Certifcate API."""
 
@@ -348,8 +361,15 @@ class DigiCertIssuerPlugin(IssuerPlugin):
         data = map_fields(issuer_options, csr)
 
         # propagate renewal information
-        if "renewal_of_order_id" in issuer_options:
-            data["renewal_of_order_id"] = issuer_options["renewal_of_order_id"]
+        if "replaces" in issuer_options:
+            old_cert = issuer_options["replaces"]
+            try:
+                old_cert_id = old_cert.external_id
+                current_app.logger.debug(f"Looking up the order id for certificate {old_cert_id}")
+                old_order_id = get_order_id(session=self.session, base_url=base_url, digicert_cert_id=old_cert_id)
+                data["renewal_of_order_id"] = old_order_id
+            except Exception:
+                current_app.logger.warning(f"Exception when trying to get the id of the old order that replaces this one.")
 
         # make certificate request
         response = self.session.post(determinator_url, data=json.dumps(data))
