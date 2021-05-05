@@ -338,14 +338,20 @@ class DigiCertIssuerPlugin(IssuerPlugin):
         :param issuer_options:
         :return: :raise Exception:
         """
+        # prepare certificate request
         base_url = current_app.config.get("DIGICERT_URL")
         cert_type = current_app.config.get("DIGICERT_ORDER_TYPE")
 
-        # make certificate request
         determinator_url = "{0}/services/v2/order/certificate/{1}".format(
             base_url, cert_type
         )
         data = map_fields(issuer_options, csr)
+
+        # propagate renewal information
+        if "renewal_of_order_id" in issuer_options:
+            data["renewal_of_order_id"] = issuer_options["renewal_of_order_id"]
+
+        # make certificate request
         response = self.session.post(determinator_url, data=json.dumps(data))
 
         if response.status_code > 399:
