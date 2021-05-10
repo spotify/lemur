@@ -4,9 +4,9 @@
 
 * public upstream [Netflix/lemur](https://github.com/Netflix/lemur/) 
 * public fork [spotify/lemur](https://github.com/spotify/lemur/) (pulled in as submodule in internal lemur-frontend and spotify-lemur)
-* internal [lemur-frontend](https://ghe.spotify.net/wasabi/lemur-frontend/) (static frontend code, used as base-image for spotify-lemur)
-* internal [spotify-lemur](https://ghe.spotify.net/wasabi/spotify-lemur/) (main internal repository, including build pipeline, GKE deployment definitions and docs) 📍 you are here
-* internal [spotify-lemur-redis](https://ghe.spotify.net/wasabi/spotify-lemur-redis/) (plain redis instance for celery)
+* internal [lemur-frontend](https://ghe.spotify.net/atc/lemur-frontend/) (static frontend code, used as base-image for spotify-lemur)
+* internal [spotify-lemur](https://ghe.spotify.net/atc/spotify-lemur/) (main internal repository, including build pipeline, GKE deployment definitions and docs) 📍 you are here
+* internal [spotify-lemur-redis](https://ghe.spotify.net/atc/spotify-lemur-redis/) (plain redis instance for celery)
 
 ## Architecture and components
 
@@ -90,13 +90,13 @@ Note that the `domains` table might still have entries with the domains the cert
 
 ## Celery Tasks
 
-The [Celery Beat schedule is defined in lemur.conf.py](https://ghe.spotify.net/wasabi/spotify-lemur/blob/master/lemur.conf.py#L221).
+The [Celery Beat schedule is defined in lemur.conf.py](https://ghe.spotify.net/atc/spotify-lemur/blob/master/lemur.conf.py#L221).
 
 Tasks can be inpsected with celery-flower on https://certs.spotify.net/celery-flower.
 
 ### Manually triggering a celery task
 
-1. Use `kubectx` to make sure you're in the `gke_gke-xpn-1_europe-west1_europe-west1-j1b3` context.
+1. Run `kubectl config use-context gke_gke-xpn-1_europe-west1_europe-west1-j1b3` to switch to the correct context.
 1. Run `kubectl get pods --namespace cert-management` to find out the name of the currently running celery beat pod name.
 1. Run `kubectl exec $LEMUR_CELERY_BEAT_POD_NAME celery -- celery -A lemur.common.celery call lemur.common.celery.$TASK_NAME` to run the task $TASK_NAME, so for example `kubectl exec lemur-celery-beat-7cc6d47c4f-qqbkh celery -- celery -A lemur.common.celery call lemur.common.celery.fetch_all_pending_certs`
 
