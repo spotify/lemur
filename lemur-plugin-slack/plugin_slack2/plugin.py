@@ -50,7 +50,13 @@ def _generate_rotation_notification_attachments(endpoint, extra_message=None):
     new_cert_start_validity = new_cert.not_before.format("YYYY-MM-DD")
     new_cert_end_validity = new_cert.not_after.format("YYYY-MM-DD")
 
-    message = f"Rotating certificate on LB `{load_balancer}` in GCP project `{gcp_project}`.\n@atc-squad, remember to update the list of certs in the deployment manager code!"
+    # add ping to ATC only if the cert being rotated is a prod (i.e. non-test) cert
+    atc_ping = ""
+    if "canary-certificate-for-noop.spotify.com" not in new_domains:
+        atc_ping += "\n@atc-squad remember to update the list of certs in the deployment manager code!"
+
+    message = f"Rotating certificate on LB `{load_balancer}` in GCP project `{gcp_project}`.{atc_ping}"
+
     if extra_message:
         message += f": {extra_message}"
 
