@@ -50,7 +50,7 @@ def _generate_rotation_notification_attachments(endpoint, extra_message=None):
     new_cert_start_validity = new_cert.not_before.format("YYYY-MM-DD")
     new_cert_end_validity = new_cert.not_after.format("YYYY-MM-DD")
 
-    message = f"Rotating certificate on LB `{load_balancer}` in GCP project `{gcp_project}`"
+    message = f"Rotating certificate on LB `{load_balancer}` in GCP project `{gcp_project}`.\n@atc-squad, remember to update the list of certs in the deployment manager code!"
     if extra_message:
         message += f": {extra_message}"
 
