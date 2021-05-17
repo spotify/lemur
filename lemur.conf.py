@@ -128,6 +128,9 @@ ACTIVE_PROVIDERS = ['google']
 GOOGLE_CLIENT_ID = str(os.environ.get('GOOGLE_CLIENT_ID','421791425557-lfk56lqi3rnhi4n2fr2rakmbv4lbc93l.apps.googleusercontent.com'))
 GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
+# disable password login for all but the admin user (as backup in case oauth does not work)
+PASSWORD_LOGIN_ALLOWED = ['admin']
+
 USE_ASYNCHRONOUS_DESTINATION_UPLOAD = True
 
 LOG_CONFIG_DICT = dict(
