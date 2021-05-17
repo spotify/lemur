@@ -361,15 +361,26 @@ class DigiCertIssuerPlugin(IssuerPlugin):
         data = map_fields(issuer_options, csr)
 
         # propagate renewal information
-        if "replaces" in issuer_options:
-            old_cert = issuer_options["replaces"]
-            try:
-                old_cert_id = old_cert.external_id
-                current_app.logger.debug(f"Looking up the order id for certificate {old_cert_id}")
-                old_order_id = get_order_id(session=self.session, base_url=base_url, digicert_cert_id=old_cert_id)
-                data["renewal_of_order_id"] = old_order_id
-            except Exception:
-                current_app.logger.warning(f"Exception when trying to get the id of the old order that replaces this one.")
+        if issuer_options.get("replaces"):
+            old_cert_id = None
+
+            # grab the first external id we can find in the case when one cert
+            # replaces multiple certs (this isn't a guarantee that it's an
+            # digicert external id).
+            for old_cert in issuer_options["replaces"]:
+                if old_cert.external_id:
+                    old_cert_id = old_cert.external_id
+                    break
+
+            if old_cert_id:
+                try:
+                    current_app.logger.debug(f"Looking up the order id for certificate {old_cert_id}")
+                    old_order_id = get_order_id(session=self.session, base_url=base_url, digicert_cert_id=old_cert_id)
+                    data["renewal_of_order_id"] = old_order_id
+                except Exception:
+                    current_app.logger.warning(f"Exception when trying to get the id of the old order that replaces this one.")
+            else:
+                 current_app.logger.info("The replaced certificates did not have external_id - will not mark order as renewed")
 
         # make certificate request
         response = self.session.post(determinator_url, data=json.dumps(data))
