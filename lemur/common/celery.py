@@ -1241,7 +1241,14 @@ def rotate_endpoint(self, endpoint_id, **kwargs):
     logger.info(f"Attaching {new_cert_name} to {endpoint.name}")
 
     # update
-    endpoint.source.plugin.update_endpoint(endpoint, new_cert_name)
+    lock_acquired = False
+    try:
+        with red.lock(endpoint.name, blocking_timeout=10):
+            lock_acquired = True
+            endpoint.source.plugin.update_endpoint(endpoint, new_cert_name)
+    finally:
+        if not lock_acquired:
+            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name}")
 
     # schedule a task to remove the old certificate
     logger.info(
@@ -1276,7 +1283,14 @@ def rotate_endpoint_remove_cert(self, endpoint_id, certificate_id):
         logger.warning("Could not detach cert because certificate does not exist - maybe this task was scheduled twice.")
         return
 
-    endpoint.source.plugin.remove_certificate(endpoint, certificate.name)
+    lock_acquired = False
+    try:
+        with red.lock(endpoint.name, blocking_timeout=10):
+            lock_acquired = True
+            endpoint.source.plugin.remove_certificate(endpoint, certificate.name)
+    finally:
+        if not lock_acquired:
+            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name}")
 
     # sync source
     if not is_task_scheduled(sync_source, (endpoint.source.label,)):
