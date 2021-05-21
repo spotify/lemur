@@ -1230,6 +1230,14 @@ def rotate_endpoint(self, endpoint_id, **kwargs):
     else:
         extra_message = None
 
+    lock_acquired = False
+    try:
+        with red.lock(endpoint.name.rsplit("/", 1)[0], blocking_timeout=10):
+            lock_acquired = True
+    finally:
+        if not lock_acquired:
+            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name.rsplit("/", 1)[0]}")
+
     # send notification taking notifications from both new and old certificate
     send_notifications(
         list(set(endpoint.certificate.notifications + new_cert.notifications)),
@@ -1241,14 +1249,7 @@ def rotate_endpoint(self, endpoint_id, **kwargs):
     logger.info(f"Attaching {new_cert_name} to {endpoint.name}")
 
     # update
-    lock_acquired = False
-    try:
-        with red.lock(endpoint.name, blocking_timeout=10):
-            lock_acquired = True
-            endpoint.source.plugin.update_endpoint(endpoint, new_cert_name)
-    finally:
-        if not lock_acquired:
-            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name}")
+    endpoint.source.plugin.update_endpoint(endpoint, new_cert_name)
 
     # schedule a task to remove the old certificate
     logger.info(
@@ -1285,12 +1286,12 @@ def rotate_endpoint_remove_cert(self, endpoint_id, certificate_id):
 
     lock_acquired = False
     try:
-        with red.lock(endpoint.name, blocking_timeout=10):
+        with red.lock(endpoint.name.rsplit("/", 1)[0], blocking_timeout=10):
             lock_acquired = True
             endpoint.source.plugin.remove_certificate(endpoint, certificate.name)
     finally:
         if not lock_acquired:
-            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name}")
+            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name.rsplit("/", 1)[0]}")
 
     # sync source
     if not is_task_scheduled(sync_source, (endpoint.source.label,)):
