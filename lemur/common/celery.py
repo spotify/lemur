@@ -1236,7 +1236,7 @@ def rotate_endpoint(self, endpoint_id, **kwargs):
             lock_acquired = True
     finally:
         if not lock_acquired:
-            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name.rsplit("/", 1)[0]}")
+            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name.rsplit('/', 1)[0]}")
 
     # send notification taking notifications from both new and old certificate
     send_notifications(
@@ -1291,7 +1291,7 @@ def rotate_endpoint_remove_cert(self, endpoint_id, certificate_id):
             endpoint.source.plugin.remove_certificate(endpoint, certificate.name)
     finally:
         if not lock_acquired:
-            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name.rsplit("/", 1)[0]}")
+            raise RuntimeError(f"Did not manage to acquire lock for endpoint: {endpoint.name.rsplit('/', 1)[0]}")
 
     # sync source
     if not is_task_scheduled(sync_source, (endpoint.source.label,)):
