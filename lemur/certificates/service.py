@@ -738,7 +738,7 @@ def calculate_reissue_range(start, end):
     new_start = arrow.utcnow().floor("day")
     new_end = new_start + span
 
-    return new_start, arrow.get(new_end).ceil("day")
+    return new_start, arrow.get(new_end).replace(hour=13).floor("hour")
 
 
 def get_certificate_primitives(certificate):
