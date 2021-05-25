@@ -185,15 +185,19 @@ class Gcp:
         return request.execute()
 
     @backoff.on_exception(backoff.expo, googleapiclient.errors.HttpError, max_time=30)
-    def set_load_balancer_ssl_certificates(self, name, kind, certificate_list):
+    def set_load_balancer_ssl_certificates(self, name, kind, config):
         """Fetches and returns a load balancer resource from GCP.
 
         Args:
             name (str): Name of the load balancer
             kind (str): Load balancer kind.
                 Example: compute#targetHttpsProxy or compute#targetSslProxy
-            certificate_list (List[str]): List of certificates resource URIs.
+            config (Dict): Complete load balancer configuration json.
+                Can inlcude fingerprint for optimistic locking.
         """
+
+        certificate_list = config["sslCertificates"]
+
         # must check that number of certificates are <= 15
         if len(certificate_list) > 15:
             raise ValueError(
@@ -203,15 +207,15 @@ class Gcp:
         self.logger.debug(
             f"Setting ssl certificate list for load balancer {name} to {certificate_list}."
         )
-        request_body = {"sslCertificates": certificate_list}
 
         if kind == "compute#targetHttpsProxy":
-            request = self.client.targetHttpsProxies().setSslCertificates(
+            request = self.client.targetHttpsProxies().patch(
                 project=self.project,
                 targetHttpsProxy=name,
-                body=request_body,
+                body=config,
             )
         elif kind == "compute#targetSslProxy":
+            request_body = {"sslCertificates": certificate_list}
             request = self.client.targetSslProxies().setSslCertificates(
                 project=self.project,
                 targetSslProxy=name,

@@ -192,7 +192,7 @@ def test_set_load_balancer_ssl_certificates(get_gcp_client, kind):
     )
 
     response = client.set_load_balancer_ssl_certificates(
-        "test-lb", kind, ["cert-a", "cert-b"]
+        "test-lb", kind, {"sslCertificates": ["cert-a", "cert-b"]}
     )
 
     assert response["message"] == "success"
@@ -206,4 +206,6 @@ def test_update_lb_error(get_gcp_client, kind):
     client = get_gcp_client()
 
     with pytest.raises(ValueError):
-        client.set_load_balancer_ssl_certificates("test-lb", kind, ["cert-a"] * 20)
+        client.set_load_balancer_ssl_certificates(
+            "test-lb", kind, {"sslCertificates": ["cert-a"] * 20}
+        )

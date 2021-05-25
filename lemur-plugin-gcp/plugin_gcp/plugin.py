@@ -149,7 +149,7 @@ class GcpSource(SourcePlugin):
         lb = client.get_load_balancer_by_name_and_kind(target_proxy_name, endpoint.type)
 
         if gcp_cert["selfLink"] not in lb["sslCertificates"]:
-            # cert is already attached
+            # cert is already removed
             logger.info(
                 f"Certificate {cert_name} is not attached to {lb['name']}, skipping."
             )
@@ -158,9 +158,9 @@ class GcpSource(SourcePlugin):
         new_certificate_list = [
             c for c in lb["sslCertificates"] if c != gcp_cert["selfLink"]
         ]
-        client.set_load_balancer_ssl_certificates(
-            target_proxy_name, endpoint.type, new_certificate_list
-        )
+        lb["sslCertificates"] = new_certificate_list
+
+        client.set_load_balancer_ssl_certificates(target_proxy_name, endpoint.type, lb)
 
         logger.info(f"Removed certificate {cert_name} from {lb['name']}")
 
