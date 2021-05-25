@@ -1208,6 +1208,13 @@ def rotate_all_pending_endpoints():
     else:
         extra_message = None
 
+    logger.info(f"Attaching {new_cert_name} to {endpoint.name}")
+
+    # update with redis lock
+    # will raise redis.exceptions.LockError Unable to acquire lock within the time specified
+    with red.lock(endpoint.name.rsplit("/", 1)[0], blocking_timeout=10):
+        endpoint.source.plugin.update_endpoint(endpoint, new_cert_name)
+
     # send notification taking notifications from both new and old certificate
     send_notifications(
         list(set(endpoint.certificate.notifications + new_cert.notifications)),
@@ -1215,12 +1222,6 @@ def rotate_all_pending_endpoints():
         extra_message,
         endpoint=endpoint,
     )
-
-    logger.info(f"Attaching {new_cert_name} to {endpoint.name}")
-
-    # update
-    endpoint.source.plugin.update_endpoint(endpoint, new_cert_name)
-
     # schedule a task to remove the old certificate
     logger.info(
         f"Scheduling {rotate_endpoint_remove_cert.name}{str(remove_cert_args)} to execute in {delay_before_removal} seconds."
@@ -1254,7 +1255,8 @@ def rotate_endpoint_remove_cert(self, endpoint_id, certificate_id):
         logger.warning("Could not detach cert because certificate does not exist - maybe this task was scheduled twice.")
         return
 
-    endpoint.source.plugin.remove_certificate(endpoint, certificate.name)
+    with red.lock(endpoint.name.rsplit("/", 1)[0], blocking_timeout=10):
+        endpoint.source.plugin.remove_certificate(endpoint, certificate.name)
 
     # sync source
     if not is_task_scheduled(sync_source, (endpoint.source.label,)):
