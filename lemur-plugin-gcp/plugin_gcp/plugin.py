@@ -130,9 +130,8 @@ class GcpSource(SourcePlugin):
             return
 
         new_certificate_list = [gcp_cert["selfLink"]] + lb["sslCertificates"]
-        client.set_load_balancer_ssl_certificates(
-            target_proxy_name, endpoint.type, new_certificate_list
-        )
+        lb["sslCertificates"] = new_certificate_list
+        client.set_load_balancer_ssl_certificates(target_proxy_name, endpoint.type, lb)
 
         logger.info(f"Attached certificate {cert_name} to {lb['name']}")
 
