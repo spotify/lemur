@@ -255,7 +255,7 @@ tabulate==0.8.7
     # via -r requirements.in
 twofish==0.3.0
     # via pyjks
-urllib3==1.25.8
+urllib3==1.26.5
     # via
     #   botocore
     #   requests
