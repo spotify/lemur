@@ -233,9 +233,9 @@ CELERYBEAT_SCHEDULE = {
         },
         'schedule': crontab(
             day_of_week='mon-thu', 
-            hour="11", 
+            hour="7", 
             minute="00"
-        ), # 13:00 CEST on Mon,Tue,Wed,Thu
+        ), # 09:00 CEST on Mon,Tue,Wed,Thu
     },
     'rotate_all_pending_endpoints': {
         'task': 'lemur.common.celery.rotate_all_pending_endpoints',
