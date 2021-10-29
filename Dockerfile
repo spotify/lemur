@@ -53,7 +53,7 @@ COPY lemur-plugin-slack lemur-plugin-slack
 RUN cd lemur-plugin-slack && pip install . && cd ..
 
 # install flower
-RUN pip install flower 
+RUN pip install flower==v0.9.7
 COPY start-flower.sh /opt/lemur/
 COPY celery_flower.py /opt/lemur/
 RUN ln -s /opt/lemur/lemur.conf.py /opt/lemur/lemur_conf.py
