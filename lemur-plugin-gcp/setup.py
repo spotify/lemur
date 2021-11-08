@@ -13,9 +13,10 @@ setup(
         ],
     },
     install_requires=[
-        "google-api-python-client == 1.*",
-        "google-oauth == 1.*",
+        "google-api-python-client == 1.12.8",
+        "google-oauth == 1.0.1",
         "backoff == 1.10",
+        "google_api_core == 1.31.0"
     ],
     packages=find_packages(),
     test_requires=(current / "requirements-test.txt").read_text().splitlines(),
