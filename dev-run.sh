@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Reading local environment variables from .lemur-env"
-source .lemur-env
+export $(xargs <.lemur-env)
 
 echo "Starting postgres..."
 docker-compose up -d postgres

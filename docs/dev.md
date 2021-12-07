@@ -3,6 +3,7 @@
 ## Setting up a dev environment
 `Requirements: docker, docker-compose, python37`
 `System packages required: postgresql redis openldap cyrus_sasl openssl`
+(On Ubuntu Focal (20.04) these might be: `postgresql libpq-dev redis libldap2-dev libsasl2-dev openssl`)
 
 
 ### MacOS packages installation
@@ -69,7 +70,7 @@ To clean up after previous development, stop all docker containers and execute `
 
 ```bash
 python generate-env.py > .lemur-env
-source .lemur-env
+export $(xargs <.lemur-env)
 ```
 
 This will create a file `.lemur-env` in the folder with local configuration
@@ -80,9 +81,13 @@ Start postgres:
 docker-compose up -d postgres
 ```
 
+If you get "Error starting userland proxy: listen tcp4 0.0.0.0:5432: bind: address already in use",
+you might need to stop postgres on your system first: `systemctl stop postgresql`.
+
+
 Initialize the database:
 ```bash
-source .lemur-env
+export $(xargs <.lemur-env)
 cd public-lemur/lemur/
 lemur init
 ```
@@ -118,13 +123,13 @@ lemur runserver
 ### Nginx for Frontend and Backend proxy
 If you're on mac:
 ```bash
-source .lemur-env
+export $(xargs <.lemur-env)
 docker-compose up -d nginx-mac
 ```
 
 If you're on linux:
 ```bash
-source .lemur-env
+export $(xargs <.lemur-env)
 docker-compose up -d nginx-linux
 ```
 
