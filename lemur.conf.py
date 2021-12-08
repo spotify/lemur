@@ -116,6 +116,7 @@ PLUGINS = [
     'gcp_dest',
     'gcp_source',
     'slack2_notification',
+    'gcp_secretmanager_dest',
 ]
 
 LEMUR_DEFAULT_ISSUER_PLUGIN = 'digicert_issuer'
@@ -129,7 +130,7 @@ GOOGLE_CLIENT_ID = str(os.environ.get('GOOGLE_CLIENT_ID','421791425557-lfk56lqi3
 GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
 # disable password login for all but the admin user (as backup in case oauth does not work)
-PASSWORD_LOGIN_ALLOWED = ['admin']
+PASSWORD_LOGIN_ALLOWED = ['admin', 'lemur']
 
 USE_ASYNCHRONOUS_DESTINATION_UPLOAD = True
 

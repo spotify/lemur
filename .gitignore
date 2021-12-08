@@ -121,3 +121,6 @@ Dockerfile.local-dev
 
 # celery
 celerybeat.pid
+
+.idea
+
