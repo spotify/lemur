@@ -110,7 +110,6 @@ setup(
         "shumway==3.0.2",
         "six==1.15.0",
         "soupsieve==2.0.1",
-        "spotify-slack==0.0.0",
         "SQLAlchemy==1.3.16",
         "SQLAlchemy-Utils==0.36.8",
         "tabulate==0.8.7",
@@ -122,8 +121,7 @@ setup(
         "vine==1.3.0",
         "Werkzeug==1.0.1",
         "xmltodict==0.12.0",
-        "zipp==3.6.0"
-
+        "zipp==3.6.0",
     ],
     packages=find_packages(),
     test_requires=(current / "requirements-test.txt").read_text().splitlines(),
