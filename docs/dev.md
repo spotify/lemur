@@ -98,7 +98,7 @@ Lemur consists of multiple components.
 1. Celery Beat (Periodic task scheduler)
 1. Celery Worker (Celery worker to run tasks)
 1. PostgreSQL (Database)
-1. Redis (Backend for Celery task orchestration)
+1. Redis (Backend for Celery task orchestration) - [repo here](https://ghe.spotify.net/atc/spotify-lemur-redis) to have separate deployment cycles from the components defined in this repo
 
 You don't have to run everything if you're only on certain parts. However, the
 backend code will create tasks for certain operations, e.g. destination upload
