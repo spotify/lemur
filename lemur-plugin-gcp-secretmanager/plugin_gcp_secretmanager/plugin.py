@@ -44,8 +44,8 @@ class GcpSecretManager:
         return False
 
     def upload_ssl_certificate(self, certificate_name, cert, private_key, cert_chain):
-        """Upload a certificate to GCP. If the certificate is already uploaded under
-        the same name this function returns the resource URI for the existing certificate."""
+        """Upload a certificate to GCP Secret manager. If the certificate is already uploaded under
+        the same name this function creates a new version of the certificate."""
         cert_bundle = cert
         if cert_chain:
             cert_bundle += f"\n{cert_chain}"
@@ -135,7 +135,7 @@ class GcpSecretManagerDestination(DestinationPlugin):
         )
 
     def verify(self, cert_name, options):
-        """Verify that a certificate has been uploaded to GCP."""
+        """Verify that a certificate has been uploaded to GCP Secret Manager."""
         client = gcp_secretmanager_client(options)
 
         return client.get_ssl_certificate_by_name(cert_name)
