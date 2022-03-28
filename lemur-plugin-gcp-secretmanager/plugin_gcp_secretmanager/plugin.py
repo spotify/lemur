@@ -64,7 +64,7 @@ class GcpSecretManager:
             parent_secret = secretClient.get_secret(request={
                 "name": secret_name
             })
-            logging.info("Found previous version of secret " + secret_name + ", creating new version")
+            logging.info("Found previous version of secret %s, creating new version", secret_name)
         except google.api_core.exceptions.NotFound:
             # create new secret
             expire_time = Timestamp();
