@@ -1,11 +1,8 @@
-import base64
-import http.client
 import logging
 import json
 
 import google.api_core.exceptions
 from google.cloud import secretmanager
-import requests
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -15,7 +12,6 @@ from lemur.extensions import metrics  # pylint: disable=import-error
 from lemur.plugins.base import Plugin
 from lemur.plugins.bases import (
     DestinationPlugin,
-    SourcePlugin,
 )  # pylint: disable=import-error
 
 
@@ -38,9 +34,9 @@ class GcpSecretManager:
         })
 
         if certificate_name in secrets:
-            self.logger.debug("found secret version with name " + certificate_name)
+            self.logger.debug("found secret version with name %s", certificate_name)
             return True
-        self.logger.debug("no secret with name " + certificate_name)
+        self.logger.debug("no secret with name %s", certificate_name)
         return False
 
     def upload_ssl_certificate(self, certificate_name, cert, private_key, cert_chain):
@@ -84,7 +80,6 @@ class GcpSecretManager:
                 },
             }
 
-            print(createSecretRequest)
             self.logger.debug(createSecretRequest)
             parent_secret = secretClient.create_secret(createSecretRequest)
 
