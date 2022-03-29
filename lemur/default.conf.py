@@ -16,3 +16,10 @@ DEBUG = False
 
 LOG_LEVEL = "DEBUG"
 LOG_FILE = "lemur.log"
+
+# Celery
+
+broker_transport_options = {
+    # Check the health of connections every 5 seconds
+    'health_check_interval': 5,
+}  
