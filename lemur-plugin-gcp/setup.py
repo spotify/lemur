@@ -51,7 +51,7 @@ setup(
         "Flask-SQLAlchemy==2.4.4",
         "flower==0.9.7",
         "future==0.18.2",
-        "google-api-core==1.31.0",
+        "google-api-core==1.31.5",
         "google-api-python-client==1.12.8",
         "google-auth==1.35.0",
         "google-auth-httplib2==0.1.0",

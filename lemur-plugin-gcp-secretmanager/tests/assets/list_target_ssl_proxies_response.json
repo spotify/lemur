@@ -1,0 +1,19 @@
+{
+  "id": "projects/test-project/global/targetSslProxies",
+  "items": [
+    {
+      "id": "456",
+      "creationTimestamp": "2021-01-21T05:20:22.388-08:00",
+      "name": "tcp-test-lb-target-proxy",
+      "selfLink": "https://www.googleapis.com/compute/v1/projects/test-project/global/targetSslProxies/tcp-test-lb-target-proxy",
+      "service": "https://www.googleapis.com/compute/v1/projects/test-project/global/backendServices/tcp-test-lb",
+      "sslCertificates": [
+        "https://www.googleapis.com/compute/v1/projects/test-project/global/sslCertificates/foo-example-com-20220308-e3f8cc"
+      ],
+      "proxyHeader": "NONE",
+      "kind": "compute#targetSslProxy"
+    }
+  ],
+  "selfLink": "https://www.googleapis.com/compute/v1/projects/test-project/global/targetSslProxies",
+  "kind": "compute#targetSslProxyList"
+}
