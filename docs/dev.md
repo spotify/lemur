@@ -64,6 +64,23 @@ pip install -e lemur-plugin-gcp/
 pip install -e lemur-plugin-slack/
 ```
 
+#### Fixes for potential issues when running the above pip install commands
+
+On my Linux machine I also had to apt-get install the following packages to get the above commands to run properly
+
+For errors with `psycopg2` (postgres):
+```bash
+libpq-dev
+```
+
+For errors with `python-ldap`:
+```bash
+libsasl2-dev
+python-dev
+libldap2-dev
+libssl-dev
+```
+
 ### Create Lemur env file and initialize database
 To clean up after previous development, stop all docker containers and execute `./dev-cleanup.sh`.
 
