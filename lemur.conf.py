@@ -130,7 +130,8 @@ GOOGLE_CLIENT_ID = str(os.environ.get('GOOGLE_CLIENT_ID','421791425557-lfk56lqi3
 GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
 # disable password login for all but the admin user (as backup in case oauth does not work)
-PASSWORD_LOGIN_ALLOWED = ['admin', 'lemur']
+#for local development, add the 'lemur' user below
+PASSWORD_LOGIN_ALLOWED = ['admin'] 
 
 USE_ASYNCHRONOUS_DESTINATION_UPLOAD = True
 
