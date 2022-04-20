@@ -99,7 +99,7 @@ def gcp_secretmanager_client(options):
 
 class GcpSecretManagerDestination(DestinationPlugin):
     title = "GCP Secret Manager Destination"
-    slug = "gcp_secretmanager_dest"
+    slug = "gcp_secretmanager_destination"
     description = "GCP Secret Manager Destination Plugin"
 
     author = "Your Name"
