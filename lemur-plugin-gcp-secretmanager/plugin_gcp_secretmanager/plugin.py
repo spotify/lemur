@@ -33,7 +33,9 @@ class GcpSecretManager:
             "parent": "projects/" + self.project
         })
 
-        if certificate_name in secrets:
+        secret_names = [s.name for s in secrets]
+
+        if certificate_name in secret_names:
             self.logger.debug("found secret version with name %s", certificate_name)
             return True
         self.logger.debug("no secret with name %s", certificate_name)
