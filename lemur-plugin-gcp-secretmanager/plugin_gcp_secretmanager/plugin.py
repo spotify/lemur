@@ -35,6 +35,8 @@ class GcpSecretManager:
 
         secret_names = [s.name for s in secrets]
 
+        self.logger.debug("secret to check for: %s | secret names: %s", certificate_name, secret_names)
+
         if certificate_name in secret_names:
             self.logger.debug("found secret version with name %s", certificate_name)
             return True
