@@ -33,7 +33,10 @@ class GcpSecretManager:
             "parent": "projects/" + self.project
         })
 
-        secret_names = [s.name for s in secrets]
+        # secret.name e.g. projects/418358634264/secrets/spotify-com-20230406-3bcb8
+        # certificate_name e.g. spotify-com-20230406-3bcb8
+        # "projects/418358634264/secrets/spotify-com-20230406-3bcb8".split("/")[-1] == "spotify-com-20230406-3bcb8"
+        secret_names = [s.name.split("/")[-1] for s in secrets]
 
         self.logger.debug("secret to check for: %s | secret names: %s", certificate_name, secret_names)
 
