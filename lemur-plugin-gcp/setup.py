@@ -56,7 +56,7 @@ setup(
         "google-auth==1.35.0",
         "google-auth-httplib2==0.1.0",
         "google-oauth==1.0.1",
-        "googleapis-common-protos==1.53.0",
+        "googleapis-common-protos==1.56.0",
         "gunicorn==20.0.4",
         "httplib2==0.20.2",
         "humanize==3.13.1",
