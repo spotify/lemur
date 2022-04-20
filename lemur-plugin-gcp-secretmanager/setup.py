@@ -15,6 +15,7 @@ setup(
         "backoff == 1.10",
         "google-cloud-secret-manager == 2.9.2",
         "google-api-core == 1.31.5",
+        "googleapis-common-protos == 1.56.0",
     ],
     packages=find_packages(),
     test_requires=(current / "requirements-test.txt").read_text().splitlines(),
