@@ -8,6 +8,8 @@ template:
     versionWithEpoch: true
     tugboat:
       path: .
+    declarativeInfra:
+      enabled: true
 
 overrides:
   - pipeline: "Master build|Review build"
