@@ -48,7 +48,8 @@ class GcpSecretManager:
 
     def upload_ssl_certificate(self, certificate_name, cert, private_key, cert_chain):
         """Upload a certificate to GCP Secret manager. If the certificate is already uploaded under
-        the same name this function creates a new version of the certificate."""
+        the same name do nothing as spotify-lemur gives every cert a unique name, rather new versions
+        of the same logical cert having the exact same name as the certs they replace."""
         cert_bundle = cert
         if cert_chain:
             cert_bundle += f"\n{cert_chain}"
@@ -65,13 +66,14 @@ class GcpSecretManager:
         }
 
         secretClient = secretmanager.SecretManagerServiceClient()
+        secret_name = "projects/" + self.project + "/secrets/" + certificate_name
 
         try:
-            secret_name = "projects/" + self.project + "/secrets/" + certificate_name
             parent_secret = secretClient.get_secret(request={
                 "name": secret_name
             })
-            self.logger.info("Found previous version of secret %s, creating new version", secret_name)
+            self.logger.info("Found previous version of secret %s, doing nothing", secret_name)
+            return secret_name
         except google.api_core.exceptions.NotFound:
             # create new secret
             expire_time = Timestamp();
@@ -95,7 +97,7 @@ class GcpSecretManager:
             "payload": {"data": json.dumps(ssl_certificate_body).encode('utf8')}
         })
 
-        return version.name
+        return secret_name
 
 
 def gcp_secretmanager_client(options):
