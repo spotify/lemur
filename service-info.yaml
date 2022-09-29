@@ -40,6 +40,7 @@ facts:
   helios_agent: false
 
   role: spotifylemur
+  pagerdutykey: 176efa5397264502c0023f6d0b79e82e  # PagerDuty API key.
 
   # Email for MMA alerting
   alert_email: atc-private+spotify-lemur@spotify.com
