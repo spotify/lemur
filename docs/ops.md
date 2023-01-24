@@ -132,9 +132,9 @@ $2y$12$K5wLZhxrdNC.eLF9lYFAwuD8BZKl08bOE77HPe.t5M8DCzuSPo11C # example output, t
 To update the database:
 
 ```
-# login to the database
+-- login to the database
 BEGIN;
 UPDATE users SET password = 'password hash goes here'  WHERE username = 'admin';
-# check only 1 row was updated!!!
-# COMMIT -- this is comment to stop horrible copy and paste mistakes, you must commit for it to work!
+-- check only 1 row was updated!!!
+-- COMMIT -- this is comment to stop horrible copy and paste mistakes, you must commit for it to work!
 ```
