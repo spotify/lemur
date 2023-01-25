@@ -1,0 +1,56 @@
+apiVersion: "sql.cnrm.cloud.google.com/v1beta1"
+kind: "SQLInstance"
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+  name: "lemur"
+  namespace: "xpn-cert-management"
+spec:
+  databaseVersion: "POSTGRES_12"
+  region: "europe-west1"
+  resourceID: "lemur"
+  settings:
+    activationPolicy: "ALWAYS"
+    availabilityType: "ZONAL"
+    backupConfiguration:
+      backupRetentionSettings:
+        retainedBackups: 7
+        retentionUnit: "COUNT"
+      enabled: true
+      location: "eu"
+      pointInTimeRecoveryEnabled: true
+      startTime: "22:00"
+      transactionLogRetentionDays: 7
+    diskAutoresize: true
+    diskType: "PD_SSD"
+    ipConfiguration:
+      ipv4Enabled: true
+    locationPreference:
+      zone: "europe-west1-b" # Changing this field will restart the instance.
+    pricingPlan: "PER_USE"
+    replicationType: "SYNCHRONOUS"
+    tier: "db-custom-1-3840" # Changing this field will restart the instance.
+---
+apiVersion: "sql.cnrm.cloud.google.com/v1beta1"
+kind: "SQLUser"
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+  name: "lemur.lemur"
+  namespace: "xpn-cert-management"
+spec:
+  instanceRef:
+    name: "lemur"
+  resourceID: "lemur"
+---
+apiVersion: "sql.cnrm.cloud.google.com/v1beta1"
+kind: "SQLUser"
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+  name: "lemur.postgres"
+  namespace: "xpn-cert-management"
+spec:
+  instanceRef:
+    name: "lemur"
+  resourceID: "postgres"

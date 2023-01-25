@@ -27,7 +27,7 @@ RUN python setup.py bdist_wheel
 
 
 # NEW STAGE ========================= (multi-stage build to keep image small)
-FROM gcr.io/spotify-base-images/bionic-python3.7:2020.11-1@sha256:4767165cdd16cf6d763c8b2b3d1c83830ff0f5d10aecd4f8a619fbc2fcf9c235
+FROM gcr.io/spotify-base-images/focal-python3:2023.01-11@sha256:fae28ec53cdb6999aeff3ed8f2757a29715918b91c02d44f5d679b6a8ee60be1
 RUN apt-get update && apt-get install -y \
   libldap2-dev \
   libsasl2-dev \
@@ -45,6 +45,9 @@ RUN pip install lemur-0.8.0-py2.py3-none-any.whl
 # install plugins
 COPY lemur-plugin-gcp lemur-plugin-gcp
 RUN cd lemur-plugin-gcp && pip install . && cd ..
+
+COPY lemur-plugin-gcp-secretmanager lemur-plugin-gcp-secretmanager
+RUN cd lemur-plugin-gcp-secretmanager && pip install . && cd ..
 
 COPY lemur-plugin-ffwd lemur-plugin-ffwd
 RUN cd lemur-plugin-ffwd && pip install . && cd ..

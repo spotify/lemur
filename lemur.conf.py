@@ -116,6 +116,7 @@ PLUGINS = [
     'gcp_dest',
     'gcp_source',
     'slack2_notification',
+    'gcp_secretmanager_dest',
 ]
 
 LEMUR_DEFAULT_ISSUER_PLUGIN = 'digicert_issuer'
@@ -129,7 +130,8 @@ GOOGLE_CLIENT_ID = str(os.environ.get('GOOGLE_CLIENT_ID','421791425557-lfk56lqi3
 GOOGLE_SECRET = str(os.environ.get('GOOGLE_SECRET',''))
 
 # disable password login for all but the admin user (as backup in case oauth does not work)
-PASSWORD_LOGIN_ALLOWED = ['admin']
+#for local development, add the 'lemur' user below
+PASSWORD_LOGIN_ALLOWED = ['admin'] 
 
 USE_ASYNCHRONOUS_DESTINATION_UPLOAD = True
 
@@ -186,7 +188,7 @@ SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI','postgresql:/
 DIGICERT_URL = "https://www.digicert.com"
 DIGICERT_API_KEY = os.environ.get("DIGICERT_API_KEY")
 DIGICERT_ORG_ID = "130680"
-DIGICERT_ORDER_TYPE = "ssl"
+DIGICERT_ORDER_TYPE = "ssl_basic"
 DIGICERT_ROOT = """-----BEGIN CERTIFICATE-----
 MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
 MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
@@ -223,7 +225,7 @@ CELERYD_HIJACK_ROOT_LOGGER = False if LOG_CONFIG_DICT else True
 
 # increase visibility timeout (should be longer than longest skew-chain)
 # see: https://docs.celeryproject.org/en/2.2/getting-started/brokers/redis.html#visibility-timeout
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 21600}  # 6 hours
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 21600, 'health_check_interval': 5}  # 6 hours
 
 CELERYBEAT_SCHEDULE = {
     'certificate_reissue': {

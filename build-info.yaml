@@ -8,6 +8,8 @@ template:
     versionWithEpoch: true
     tugboat:
       path: .
+    declarativeInfra:
+      enabled: true
 
 overrides:
   - pipeline: "Master build|Review build"
@@ -18,5 +20,5 @@ overrides:
         tasks:
           - task: "Test with tox"
             steps:
-              - action: gcr.io/action-containers/tox:3.15.0-1@sha256:1a786d1a3bf98afc626875791245d03acdf95840499f92c6511523b2b941644f
+              - action: gcr.io/action-containers/tox:4.6.2@sha256:33b9011d8290b726db69874449f1c4dcb98c38475c081aaf1f04c541795eb62a
                 args: ["-c", "lemur-plugin-gcp/tox.ini"]
