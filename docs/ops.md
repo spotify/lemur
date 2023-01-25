@@ -114,3 +114,27 @@ Or using gsutil in a terminal, run:
 ```
 gcloud projects add-iam-policy-binding <project> --member serviceAccount:cert-management@gke-accounts.iam.gserviceaccount.com --role roles/compute.loadBalancerAdmin
 ```
+
+## Rotating Admin Password
+
+Unfortunately this has to be done via a manual DB update.
+
+Lemur uses bcrypt with 12 rounds to hash passwords.
+
+To generate a new password hash:
+
+```
+$ echo "password" > file_with_password_in # don't literally do this as password will end up in your bash history, this is an example
+$ htpasswd -nbBC 12 admin "$(cat file_with_password_in)" | cut -f 2 -d ":"
+$2y$12$K5wLZhxrdNC.eLF9lYFAwuD8BZKl08bOE77HPe.t5M8DCzuSPo11C # example output, this is a hash for "password"
+```
+
+To update the database:
+
+```
+-- login to the database
+BEGIN;
+UPDATE users SET password = 'password hash goes here'  WHERE username = 'admin';
+-- check only 1 row was updated!!!
+-- COMMIT -- this is comment to stop horrible copy and paste mistakes, you must commit for it to work!
+```
