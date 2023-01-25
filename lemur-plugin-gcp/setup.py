@@ -82,7 +82,7 @@ setup(
         "paramiko==2.7.2",
         "pem==20.1.0",
         "prometheus-client==0.8.0",
-        "protobuf==3.19.1",
+        "protobuf==3.19.5",
         "psycopg2==2.8.6",
         "pyasn1==0.4.8",
         "pyasn1-modules==0.2.8",
