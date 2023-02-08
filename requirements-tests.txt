@@ -18,12 +18,12 @@ bandit==1.7.0
     # via -r requirements-tests.in
 black==20.8b1
     # via -r requirements-tests.in
+boto==2.49.0
+    # via moto
 boto3==1.16.51
     # via
     #   aws-sam-translator
     #   moto
-boto==2.49.0
-    # via moto
 botocore==1.19.51
     # via
     #   aws-xray-sdk
@@ -44,7 +44,7 @@ click==7.1.2
     #   flask
 coverage==5.3.1
     # via -r requirements-tests.in
-cryptography==3.3.2
+cryptography==39.0.1
     # via
     #   moto
     #   python-jose
@@ -144,15 +144,15 @@ pyparsing==2.4.7
     # via packaging
 pyrsistent==0.16.0
     # via jsonschema
-pytest-flask==1.1.0
-    # via -r requirements-tests.in
-pytest-mock==3.5.1
-    # via -r requirements-tests.in
 pytest==6.2.1
     # via
     #   -r requirements-tests.in
     #   pytest-flask
     #   pytest-mock
+pytest-flask==1.1.0
+    # via -r requirements-tests.in
+pytest-mock==3.5.1
+    # via -r requirements-tests.in
 python-dateutil==2.8.1
     # via
     #   botocore
@@ -173,14 +173,14 @@ redis==3.5.3
     # via fakeredis
 regex==2020.4.4
     # via black
-requests-mock==1.8.0
-    # via -r requirements-tests.in
 requests==2.25.1
     # via
     #   docker
     #   moto
     #   requests-mock
     #   responses
+requests-mock==1.8.0
+    # via -r requirements-tests.in
 responses==0.10.12
     # via moto
 rsa==4.1
@@ -192,7 +192,6 @@ six==1.15.0
     #   aws-sam-translator
     #   bandit
     #   cfn-lint
-    #   cryptography
     #   docker
     #   ecdsa
     #   fakeredis
