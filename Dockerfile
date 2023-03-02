@@ -27,7 +27,7 @@ RUN python setup.py bdist_wheel
 
 
 # NEW STAGE ========================= (multi-stage build to keep image small)
-FROM gcr.io/spotify-base-images/focal-python3:2023.01-11@sha256:fae28ec53cdb6999aeff3ed8f2757a29715918b91c02d44f5d679b6a8ee60be1
+FROM gcr.io/spotify-base-images/focal-python3:2023.02-1@sha256:2ca7e21a2d6c5933ec636744972c5a57f07eb411afcb383c1c579db49b0a7ec6
 RUN apt-get update && apt-get install -y \
   libldap2-dev \
   libsasl2-dev \
