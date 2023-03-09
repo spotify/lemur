@@ -20,5 +20,5 @@ overrides:
         tasks:
           - task: "Test with tox"
             steps:
-              - action: gcr.io/action-containers/tox:4.6.2@sha256:33b9011d8290b726db69874449f1c4dcb98c38475c081aaf1f04c541795eb62a
+              - action: gcr.io/action-containers/tox:4.6.3_20230302T100800@sha256:237512d90010837b6d5f320f5a1e705b2b5da1fa9b9c1b3a0db1712d836d25e7
                 args: ["-c", "lemur-plugin-gcp/tox.ini"]
