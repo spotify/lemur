@@ -40,7 +40,7 @@ from lemur.domains.models import Domain
 from lemur.extensions import metrics
 from lemur.models import (
     certificate_source_associations,
-    certificate_destination_associations,
+    CertificateDestination,
     certificate_notification_associations,
     certificate_replacement_associations,
     roles_certificates,
@@ -161,7 +161,7 @@ class Certificate(BaseModel):
     )
     destinations = relationship(
         "Destination",
-        secondary=certificate_destination_associations,
+        secondary=CertificateDestination.__table__,
         backref="certificate",
     )
     sources = relationship(

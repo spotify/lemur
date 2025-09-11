@@ -9,25 +9,25 @@
 .. moduleauthor:: Kevin Glisson <kglisson@netflix.com>
 """
 from sqlalchemy import Column, Integer, ForeignKey, Index, UniqueConstraint
+from sqlalchemy.orm import relationship, backref
 
 from lemur.database import db
 
-certificate_destination_associations = db.Table(
-    "certificate_destination_associations",
-    Column(
-        "destination_id", Integer, ForeignKey("destinations.id", ondelete="cascade")
-    ),
-    Column(
-        "certificate_id", Integer, ForeignKey("certificates.id", ondelete="cascade")
-    ),
-)
+class CertificateDestination(db.Model):
+    __tablename__ = "certificate_destination_associations"
+    destination_id = Column(Integer, ForeignKey("destinations.id", ondelete="cascade"), primary_key=True)
+    certificate_id = Column(Integer, ForeignKey("certificates.id", ondelete="cascade"), primary_key=True)
+
+    destination = relationship("Destination", backref=backref("destination_certificates", cascade="all, delete-orphan"))
+    certificate = relationship("Certificate", backref=backref("certificate_destinations", cascade="all, delete-orphan"))
+
 
 Index(
     "certificate_destination_associations_ix",
-    certificate_destination_associations.c.destination_id,
-    certificate_destination_associations.c.certificate_id,
-    unique=True
+    CertificateDestination.destination_id,
+    CertificateDestination.certificate_id,
 )
+
 
 certificate_source_associations = db.Table(
     "certificate_source_associations",
