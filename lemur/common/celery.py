@@ -566,7 +566,7 @@ def sync_source(source):
     return log_data
 
 
-@celery_app.task(soft_time_limit=3600, autoretry_for=(Exception,), default_retry_delay=10*60, max_retries=6)
+@celery_app.task(soft_time_limit=3600, autoretry_for=(Exception,), default_retry_delay=10 * 60, max_retries=6)
 def certificate_reissue():
     """
     This celery task reissues certificates which are pending reissue
@@ -1080,98 +1080,6 @@ def certificate_expirations_metrics():
     This celery task iterates over all eligible certificates and emits a metric for the days remaining for a certificate to expire.
     This is used for building custom dashboards and alerts for certificate expiry.
     """
-
-
-@celery_app.task(bind=True, soft_time_limit=60, autoretry_for=(Exception,), default_retry_delay=10*60, max_retries=6)
-def rotate_endpoint(self, endpoint_id, **kwargs):
-    function = f"{__name__}.{sys._getframe().f_code.co_name}"
-    task_id = None
-    if celery_app.current_task:
-        task_id = celery_app.current_task.request.id
-
-    log_data = {
-        "function": function,
-        "message": f"Rotating endpoint: {endpoint_id}",
-        "task_id": task_id,
-        "endpoint_id": endpoint_id,
-    }
-
-    if task_id and is_task_active(function, task_id, (endpoint_id,)):
-        log_data["message"] = "Skipping task: Task is already active"
-        current_app.logger.debug(log_data)
-        return
-
-    current_app.logger.debug(log_data)
-
-    endpoint = endpoint_service.get(endpoint_id)
-
-    if not endpoint:
-        logger.info(f"Skipping rotation,due to {endpoint_id} did not exist")
-        return
-
-    old_certificate_id = endpoint.certificate.id
-
-    remove_cert_args = (endpoint_id, old_certificate_id)
-    delay_before_removal = current_app.config.get(
-        "CELERY_ROTATE_ENDPOINT_DELAY_BEFORE_DETACH", 60
-    )
-    if is_task_scheduled(rotate_endpoint_remove_cert.name, remove_cert_args):
-        # the remove task has already been scheduled so we skip this turn
-        logger.info(
-            f"{rotate_endpoint_remove_cert.name}{str(remove_cert_args)} already scheduled."
-        )
-        return
-
-    new_cert = endpoint.certificate.replaced[0]
-    new_cert_name = new_cert.name
-
-    # send notification taking notifications from both new and old certificate
-    send_notifications(
-        list(set(endpoint.certificate.notifications + new_cert.notifications)),
-        "rotation",
-        f"Rotating endpoint {endpoint.name}",
-        endpoint=endpoint,
-    )
-
-    logger.info(f"Attaching {new_cert_name} to {endpoint.name}")
-
-    # update
-    endpoint.source.plugin.update_endpoint(endpoint, new_cert_name)
-
-    # schedule a task to remove the old certificate
-    logger.info(
-        f"Scheduling {rotate_endpoint_remove_cert.name}{str(remove_cert_args)} to execute in {delay_before_removal} seconds."
-    )
-    rotate_endpoint_remove_cert.apply_async(
-        remove_cert_args, countdown=delay_before_removal
-    )
-
-    # sync source
-    if not is_task_scheduled(sync_source, (endpoint.source.label,)):
-        sync_source.delay(endpoint.source.label)
-
-
-@celery.task(soft_time_limit=60)
-def rotate_endpoint_remove_cert(endpoint_id, certificate_id):
-    function = f"{__name__}.{sys._getframe().f_code.co_name}"
-    logger = logging.getLogger(function)
-
-    endpoint = endpoint_service.get(endpoint_id)
-    certificate = certificate_service.get(certificate_id)
-
-    if not endpoint:
-        # note: this can happen if this is scheduled twice
-        raise RuntimeError("endpoint does not exist")
-
-    if not certificate:
-        raise RuntimeError("certificate does not exist")
-
-    with red.lock(endpoint.name.rsplit("/", 1)[0], blocking_timeout=10):
-        endpoint.source.plugin.remove_certificate(endpoint, certificate.name)
-
-    # sync source
-    if not is_task_scheduled(sync_source, (endpoint.source.label,)):
-        sync_source.delay(endpoint.source.label)
 
 
 @celery_app.task(soft_time_limit=60)
