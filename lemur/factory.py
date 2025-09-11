@@ -16,6 +16,7 @@ import socket
 import stat
 from importlib.metadata import entry_points
 from logging import Formatter, StreamHandler
+from logging.config import dictConfig
 from logging.handlers import RotatingFileHandler
 
 from pythonjsonlogger.json import JsonFormatter
@@ -214,6 +215,11 @@ def configure_logging(app):
 
     :param app:
     """
+    log_config_dict = app.config.get("LOG_CONFIG_DICT")
+    if log_config_dict:
+        dictConfig(log_config_dict)
+        return
+
     logfile = app.config.get("LOG_FILE", "lemur.log")
     # if the log file is a character special device file (ie. stdout/stderr),
     # file rotation will not work and must be disabled.
@@ -258,7 +264,16 @@ def install_plugins(app):
     from lemur.plugins import plugins
     from lemur.plugins.base import register
 
+    # entry_points={
+    #    'lemur.plugins': [
+    #         'verisign = lemur_verisign.plugin:VerisignPlugin'
+    #     ],
+    # },
+    plugins_to_install = app.config.get("PLUGINS")
     for ep in entry_points(group="lemur.plugins"):
+        if plugins_to_install and ep.name not in plugins_to_install:
+            app.logger.info(f"Skipping loading plugin {ep.name} as it is not listed in PLUGINS config list.")
+            continue
         try:
             plugin = ep.load()
         except Exception:

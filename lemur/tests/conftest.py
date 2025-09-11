@@ -95,6 +95,13 @@ def db(app, request):
 
 
 @pytest.fixture(scope="function")
+def use_gcp_certificate_names(app):
+    app.config["USE_GCP_CERTIFICATE_NAMES"] = True
+    yield
+    del app.config["USE_GCP_CERTIFICATE_NAMES"]
+
+
+@pytest.fixture(scope="function")
 def session(db, request):
     """
     Creates a new database session with (with working transaction)
@@ -306,6 +313,16 @@ def source_plugin():
 
     register(TestSourcePlugin)
     return TestSourcePlugin
+
+
+@pytest.fixture(scope="function")
+def sync_source_plugin():
+    from lemur.plugins.base import register, unregister
+    from .plugins.source_plugin import TestSourcePlugin
+
+    register(TestSourcePlugin)
+    yield TestSourcePlugin
+    unregister(TestSourcePlugin)
 
 
 @pytest.fixture(scope="function")

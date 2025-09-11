@@ -7,6 +7,8 @@ import arrow
 from flask import current_app
 from sqlalchemy import or_, cast, Integer
 
+from flask import current_app
+
 from lemur import database
 from lemur.authorities import service as authorities_service
 from lemur.authorities.models import Authority
@@ -102,6 +104,13 @@ def create_certificate(pending_certificate, certificate, user):
     :arg certificate: dict from Authority, which contains the body, chain and external id
     :arg user: User that called this function, used as 'creator' of the certificate if it does not have an owner
     """
+    # check if the pending_certificate already has been resolved, in that case return
+    # existing certificate
+    maybe_resolved_cert = get(pending_certificate.id)
+    if maybe_resolved_cert and maybe_resolved_cert.resolved and maybe_resolved_cert.resolved_cert_id:
+        current_app.logger.warning("Trying to resolve an already resolved certificate, returning existing resolved certificate")
+        return certificate_service.get(maybe_resolved_cert.resolved_cert_id)
+
     certificate["owner"] = pending_certificate.owner
     data, errors = CertificateUploadInputSchema().load(certificate)
     if errors:
@@ -117,6 +126,7 @@ def create_certificate(pending_certificate, certificate, user):
     data["roles"] = list(pending_certificate.roles)
     data["replaces"] = list(pending_certificate.replaces)
     data["rotation_policy"] = pending_certificate.rotation_policy
+    data["authority"] = pending_certificate.authority
 
     # Replace external id and chain with the one fetched from source
     data["external_id"] = certificate["external_id"]

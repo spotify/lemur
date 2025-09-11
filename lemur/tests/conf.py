@@ -217,6 +217,8 @@ ACME_DIRECTORY_URL = "https://acme-v01.api.letsencrypt.org"
 ACME_DISABLE_AUTORESOLVE = True
 ACME_PREFERRED_ISSUER = "R3"
 
+DISABLE_AUTORESOLVE_NON_ACME = True
+
 LDAP_AUTH = True
 LDAP_BIND_URI = "ldap://localhost"
 LDAP_BASE_DN = "dc=example,dc=com"
