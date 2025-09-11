@@ -111,7 +111,7 @@ certsrv[ntlm]==2.1.1
     # via
     #   -r requirements-docs.in
     #   -r requirements-tests.txt
-cffi==1.16.0
+cffi>=1.16.0
     # via
     #   -r requirements-tests.txt
     #   cryptography
@@ -302,7 +302,7 @@ grpc-google-iam-v1==0.14.0
     # via
     #   -r requirements-tests.txt
     #   google-cloud-private-ca
-grpcio==1.62.1
+grpcio>=1.62.1
     # via
     #   -r requirements-tests.txt
     #   google-api-core
@@ -547,7 +547,7 @@ prompt-toolkit==3.0.43
     # via
     #   -r requirements-tests.txt
     #   click-repl
-proto-plus==1.23.0
+proto-plus>=1.25.0
     # via
     #   -r requirements-tests.txt
     #   google-api-core
@@ -836,7 +836,7 @@ twofish==0.3.0
     # via
     #   -r requirements-tests.txt
     #   pyjks
-types-cffi==1.16.0.20240331
+types-cffi>=1.16.0.20240331
     # via
     #   -r requirements-tests.txt
     #   types-pyopenssl
