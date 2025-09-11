@@ -1166,95 +1166,6 @@ def rotate_endpoint_remove_cert(endpoint_id, certificate_id):
     if not certificate:
         raise RuntimeError("certificate does not exist")
 
-    endpoint.source.plugin.remove_certificate(endpoint, certificate.name)
-
-    # sync source
-    if not is_task_scheduled(sync_source, (endpoint.source.label,)):
-        sync_source.delay(endpoint.source.label)
-
-
-@celery.task(soft_time_limit=60)
-def rotate_all_pending_endpoints():
-    """"""
-    function = f"{__name__}.{sys._getframe().f_code.co_name}"
-    logger = logging.getLogger(function)
-=======
-    logger = logging.getLogger(function)
-
-    endpoint = endpoint_service.get(endpoint_id)
-
-    if not endpoint:
-        logger.info(f"Skipping rotation,due to {endpoint_id} did not exist")
-        return
-
-    old_certificate_id = endpoint.certificate.id
-
-    remove_cert_args = (endpoint_id, old_certificate_id)
-    delay_before_removal = current_app.config.get(
-        "CELERY_ROTATE_ENDPOINT_DELAY_BEFORE_DETACH", 60
-    )
-    if is_task_scheduled(rotate_endpoint_remove_cert.name, remove_cert_args):
-        # the remove task has already been scheduled so we skip this turn
-        logger.info(
-            f"{rotate_endpoint_remove_cert.name}{str(remove_cert_args)} already scheduled."
-        )
-        return
-
-    new_cert = endpoint.certificate.replaced[0]
-    new_cert_name = new_cert.name
-
-    if self.request.retries > 0:
-        extra_message = f"retry {self.request.retries} of {self.max_retries}"
-    else:
-        extra_message = None
-
-    logger.info(f"Attaching {new_cert_name} to {endpoint.name}")
-
-    # update with redis lock
-    # will raise redis.exceptions.LockError Unable to acquire lock within the time specified
-    with red.lock(endpoint.name.rsplit("/", 1)[0], blocking_timeout=10):
-        endpoint.source.plugin.update_endpoint(endpoint, new_cert_name)
-
-    # send notification taking notifications from both new and old certificate
-    send_notifications(
-        list(set(endpoint.certificate.notifications + new_cert.notifications)),
-        "rotation",
-        extra_message,
-        endpoint=endpoint,
-    )
-    # schedule a task to remove the old certificate
-    logger.info(
-        f"Scheduling {rotate_endpoint_remove_cert.name}{str(remove_cert_args)} to execute in {delay_before_removal} seconds."
-    )
-    rotate_endpoint_remove_cert.apply_async(
-        remove_cert_args, countdown=delay_before_removal
-    )
-
-    # sync source
-    if not is_task_scheduled(sync_source, (endpoint.source.label,)):
-        sync_source.delay(endpoint.source.label)
-
-
-@celery.task(bind=True, soft_time_limit=60, autoretry_for=(Exception,), default_retry_delay=10*60, max_retries=6)
-def rotate_endpoint_remove_cert(self, endpoint_id, certificate_id):
-    function = f"{__name__}.{sys._getframe().f_code.co_name}"
-    logger = logging.getLogger(function)
-
-    if self.request.retries > 0:
-        logger.warning(f"Retrying rotate_endpoint_remove_cert task as it failed before (retry {self.request.retries} of {self.max_retries})")
-
-    endpoint = endpoint_service.get(endpoint_id)
-    certificate = certificate_service.get(certificate_id)
-
-    if not endpoint:
-        # note: this can happen if this is scheduled twice
-        logger.warning("Could not detach cert because endpoint does not exist - maybe this task was scheduled twice.")
-        return
-
-    if not certificate:
-        logger.warning("Could not detach cert because certificate does not exist - maybe this task was scheduled twice.")
-        return
-
     with red.lock(endpoint.name.rsplit("/", 1)[0], blocking_timeout=10):
         endpoint.source.plugin.remove_certificate(endpoint, certificate.name)
 
@@ -1263,12 +1174,10 @@ def rotate_endpoint_remove_cert(self, endpoint_id, certificate_id):
         sync_source.delay(endpoint.source.label)
 
 
-@celery.task(soft_time_limit=60)
+@celery_app.task(soft_time_limit=60)
 def rotate_all_pending_endpoints():
     """"""
     function = f"{__name__}.{sys._getframe().f_code.co_name}"
-    logger = logging.getLogger(function)
->>>>>>> 5a0cd4c7 (Add retries to tasks (#40))
     task_id = None
     if celery_app.current_task:
         task_id = celery_app.current_task.request.id
