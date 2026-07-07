@@ -121,7 +121,7 @@ class TestRotateAllEndpoints:
             runner = CliRunner()
             result = runner.invoke(
                 rotate_command,
-                ["-o", old_cert.name, "-n", new_cert.name, "-c"],
+                ["-o", old_cert.name, "-n", new_cert.name, "-c", "true"],
                 catch_exceptions=False,
             )
 
@@ -146,7 +146,7 @@ class TestRotateAllEndpoints:
             runner = CliRunner()
             result = runner.invoke(
                 rotate_command,
-                ["-e", endpoint.name, "-n", new_cert.name, "-c"],
+                ["-e", endpoint.name, "-n", new_cert.name, "-c", "true"],
                 catch_exceptions=False,
             )
 
