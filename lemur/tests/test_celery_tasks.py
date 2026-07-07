@@ -1,167 +1,135 @@
+"""Tests for celery tasks.
+
+These tests import lemur.common.celery lazily inside an app context to avoid
+the module-level create_app() call that corrupts the session-scoped test DB.
+"""
 from unittest.mock import patch
 
-from celery.exceptions import SoftTimeLimitExceeded  # noqa: F401 - used in side_effect
+from celery.exceptions import SoftTimeLimitExceeded
 
 
-def _patch_celery():
-    """Context manager that patches redis and task-active check for celery tasks."""
-    return (
-        patch("lemur.common.celery.red"),
-        patch("lemur.common.celery.is_task_active", return_value=False),
-    )
+def _import_celery_task(name):
+    """Import a celery task by name, deferring the module load."""
+    import lemur.common.celery as mod
+    return getattr(mod, name)
 
 
 class TestCertificateRotateTask:
-    def test_calls_rotate_cli(self, app):
-        from lemur.common.celery import certificate_rotate
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+    def test_calls_rotate_cli(self, app, session):
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_certificate") as mock_cli, \
              patch("lemur.common.celery.metrics"):
-            result = certificate_rotate()
+            result = _import_celery_task("certificate_rotate")()
             mock_cli.rotate.assert_called_once_with(None, None, None, None, None, True)
             assert result["message"] == "rotation completed"
 
-    def test_passes_notification_config(self, app):
-        from lemur.common.celery import certificate_rotate
-
+    def test_passes_notification_config(self, app, session):
         app.config["ENABLE_ROTATION_NOTIFICATION"] = True
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_certificate") as mock_cli, \
              patch("lemur.common.celery.metrics"):
-            certificate_rotate()
+            _import_celery_task("certificate_rotate")()
             mock_cli.rotate.assert_called_once_with(None, None, None, None, True, True)
         app.config.pop("ENABLE_ROTATION_NOTIFICATION", None)
 
-    def test_calls_rotate_region_when_region_given(self, app):
-        from lemur.common.celery import certificate_rotate
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+    def test_calls_rotate_region_when_region_given(self, app, session):
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_certificate") as mock_cli, \
              patch("lemur.common.celery.metrics"):
-            certificate_rotate(region="us-east1")
+            _import_celery_task("certificate_rotate")(region="us-east1")
             mock_cli.rotate_region.assert_called_once_with(
                 None, None, None, None, True, "us-east1"
             )
             mock_cli.rotate.assert_not_called()
 
-    def test_handles_soft_time_limit(self, app):
-        from lemur.common.celery import certificate_rotate
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+    def test_handles_soft_time_limit(self, app, session):
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_certificate") as mock_cli, \
              patch("lemur.common.celery.metrics") as mock_metrics, \
              patch("lemur.common.celery.capture_exception"):
             mock_cli.rotate.side_effect = SoftTimeLimitExceeded()
-            result = certificate_rotate()
+            result = _import_celery_task("certificate_rotate")()
             assert result is None
             mock_metrics.send.assert_called_once()
             assert "timeout" in mock_metrics.send.call_args[0][0]
 
-    def test_emits_success_metric(self, app):
-        from lemur.common.celery import certificate_rotate
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+    def test_emits_success_metric(self, app, session):
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_certificate"), \
              patch("lemur.common.celery.metrics") as mock_metrics:
-            certificate_rotate()
+            _import_celery_task("certificate_rotate")()
             mock_metrics.send.assert_called_once()
             assert "success" in mock_metrics.send.call_args[0][0]
 
 
 class TestCertificateReissueTask:
-    def test_calls_reissue_cli(self, app):
-        from lemur.common.celery import certificate_reissue
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+    def test_calls_reissue_cli(self, app, session):
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_certificate") as mock_cli, \
              patch("lemur.common.celery.metrics"):
-            result = certificate_reissue()
+            result = _import_celery_task("certificate_reissue")()
             mock_cli.reissue.assert_called_once_with(None, None, True, None)
             assert result["message"] == "reissuance completed"
 
-    def test_handles_soft_time_limit(self, app):
-        from lemur.common.celery import certificate_reissue
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+    def test_handles_soft_time_limit(self, app, session):
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_certificate") as mock_cli, \
              patch("lemur.common.celery.metrics") as mock_metrics, \
              patch("lemur.common.celery.capture_exception"):
             mock_cli.reissue.side_effect = SoftTimeLimitExceeded()
-            result = certificate_reissue()
+            result = _import_celery_task("certificate_reissue")()
             assert result is None
             assert "timeout" in mock_metrics.send.call_args[0][0]
 
-    def test_emits_success_metric(self, app):
-        from lemur.common.celery import certificate_reissue
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+    def test_emits_success_metric(self, app, session):
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_certificate"), \
              patch("lemur.common.celery.metrics") as mock_metrics:
-            certificate_reissue()
+            _import_celery_task("certificate_reissue")()
             mock_metrics.send.assert_called_once()
             assert "success" in mock_metrics.send.call_args[0][0]
 
 
 class TestNotifyExpirationsTask:
-    def test_calls_notification_cli(self, app):
-        from lemur.common.celery import notify_expirations
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+    def test_calls_notification_cli(self, app, session):
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_notification") as mock_cli, \
              patch("lemur.common.celery.metrics"):
-            result = notify_expirations()
+            result = _import_celery_task("notify_expirations")()
             mock_cli.expirations.assert_called_once()
             assert result["message"] == "notify for cert expiration"
 
-    def test_handles_soft_time_limit(self, app):
-        from lemur.common.celery import notify_expirations
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+    def test_handles_soft_time_limit(self, app, session):
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.cli_notification") as mock_cli, \
              patch("lemur.common.celery.metrics") as mock_metrics, \
              patch("lemur.common.celery.capture_exception"):
             mock_cli.expirations.side_effect = SoftTimeLimitExceeded()
-            result = notify_expirations()
+            result = _import_celery_task("notify_expirations")()
             assert result is None
             assert "timeout" in mock_metrics.send.call_args[0][0]
 
 
 class TestCleanAllSourcesTask:
     def test_dispatches_clean_per_source(self, app, session):
-        from lemur.common.celery import clean_all_sources
         from lemur.tests.factories import SourceFactory
 
         SourceFactory(label="source-a")
         SourceFactory(label="source-b")
         session.commit()
 
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.clean_source") as mock_clean, \
              patch("lemur.common.celery.metrics"):
-            clean_all_sources()
+            _import_celery_task("clean_all_sources")()
             labels = [c.args[0] for c in mock_clean.delay.call_args_list]
             assert "source-a" in labels
             assert "source-b" in labels
 
     def test_emits_success_metric(self, app, session):
-        from lemur.common.celery import clean_all_sources
-
-        p1, p2 = _patch_celery()
-        with p1, p2, \
+        with patch("lemur.common.celery.is_task_active", return_value=False), \
              patch("lemur.common.celery.clean_source"), \
              patch("lemur.common.celery.metrics") as mock_metrics:
-            clean_all_sources()
+            _import_celery_task("clean_all_sources")()
             mock_metrics.send.assert_called_once()
             assert "success" in mock_metrics.send.call_args[0][0]
