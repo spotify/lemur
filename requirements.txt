@@ -271,7 +271,7 @@ pycryptodomex==3.23.0
     # via pyjks
 pyjks==20.0.0
     # via -r requirements.in
-pyjwt==2.12.1
+pyjwt==2.13.0
     # via -r requirements.in
 pynacl==1.6.2
     # via paramiko
