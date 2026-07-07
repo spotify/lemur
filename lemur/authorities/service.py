@@ -26,7 +26,6 @@ from lemur.certificates.service import upload
 
 
 
-
 def update(authority_id, description, owner, active, roles, options: Optional[str] = None):
     """
     Update an authority with new values.
