@@ -481,7 +481,6 @@ def test_authorities_put_update_options(client, authority_number, token, status)
         assert 'updated' in json.dumps(response[field])
 
 
-
 def test_authority_service_update_without_acme_url_unaffected(authority, session):
     from lemur.authorities import service
 
