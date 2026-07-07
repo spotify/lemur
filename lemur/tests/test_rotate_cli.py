@@ -98,7 +98,7 @@ class TestRotateAllEndpoints:
     def test_rotates_all_endpoints_not_skipping_any(self, session, app):
         """Regression test for the list-mutation bug (PR #83).
         With N endpoints, all N must be rotated."""
-        from lemur.certificates.cli import rotate
+        from lemur.certificates.cli import rotate_command
         from click.testing import CliRunner
 
         old_cert = CertificateFactory()
@@ -120,7 +120,7 @@ class TestRotateAllEndpoints:
 
             runner = CliRunner()
             result = runner.invoke(
-                rotate,
+                rotate_command,
                 ["-o", old_cert.name, "-n", new_cert.name, "-c"],
                 catch_exceptions=False,
             )
@@ -132,7 +132,7 @@ class TestRotateAllEndpoints:
             )
 
     def test_rotates_single_endpoint_by_name(self, session, app):
-        from lemur.certificates.cli import rotate
+        from lemur.certificates.cli import rotate_command
         from click.testing import CliRunner
 
         new_cert = CertificateFactory()
@@ -145,7 +145,7 @@ class TestRotateAllEndpoints:
              patch("lemur.certificates.cli.metrics"):
             runner = CliRunner()
             result = runner.invoke(
-                rotate,
+                rotate_command,
                 ["-e", endpoint.name, "-n", new_cert.name, "-c"],
                 catch_exceptions=False,
             )
@@ -154,7 +154,7 @@ class TestRotateAllEndpoints:
             mock_deploy.rotate_certificate.assert_called_once()
 
     def test_dry_run_does_not_rotate(self, session, app):
-        from lemur.certificates.cli import rotate
+        from lemur.certificates.cli import rotate_command
         from click.testing import CliRunner
 
         old_cert = CertificateFactory()
@@ -167,7 +167,7 @@ class TestRotateAllEndpoints:
              patch("lemur.certificates.cli.metrics"):
             runner = CliRunner()
             result = runner.invoke(
-                rotate,
+                rotate_command,
                 ["-o", old_cert.name, "-n", new_cert.name],
                 catch_exceptions=False,
             )
