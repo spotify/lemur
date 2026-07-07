@@ -614,7 +614,7 @@ pyjks==20.0.0
     # via
     #   -r requirements-docs.in
     #   -r requirements-tests.txt
-pyjwt==2.12.1
+pyjwt==2.13.0
     # via
     #   -r requirements-docs.in
     #   -r requirements-tests.txt
