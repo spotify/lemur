@@ -511,7 +511,7 @@ pyspnego==0.12.1
     # via
     #   -r requirements.txt
     #   requests-ntlm
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   -r requirements-tests.in
     #   pytest-flask
