@@ -211,8 +211,6 @@ ghi
     import requests_mock
     from lemur.plugins.lemur_digicert.plugin import DigiCertIssuerPlugin
 
-    pem_fixture = certificate_
-
     subject = DigiCertIssuerPlugin()
     adapter = requests_mock.Adapter()
     adapter.register_uri(
@@ -220,6 +218,37 @@ ghi
         "mock://www.digicert.com/services/v2/order/certificate/ssl_plus",
         text=json.dumps({"id": "id123"}),
     )
+    subject.session.mount("mock", adapter)
+
+    cert_body, cert_chain, external_id = subject.create_certificate(
+        "", {"common_name": "test.com"}
+    )
+
+    assert cert_body is None
+    assert cert_chain is None
+    assert external_id == "id123"
+
+
+def test_resolve_pending_certificate_downloads_cert(
+    certificate_="""\
+-----BEGIN CERTIFICATE-----
+abc
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+def
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+ghi
+-----END CERTIFICATE-----
+"""
+):
+    import requests_mock
+    from lemur.plugins.lemur_digicert.plugin import DigiCertIssuerPlugin
+
+    pem_fixture = certificate_
+
+    subject = DigiCertIssuerPlugin()
+    adapter = requests_mock.Adapter()
     adapter.register_uri(
         "GET",
         "mock://www.digicert.com/services/v2/order/certificate/id123",
@@ -232,12 +261,14 @@ ghi
     )
     subject.session.mount("mock", adapter)
 
-    cert, intermediate, external_id = subject.create_certificate(
-        "", {"common_name": "test.com"}
-    )
+    pending_cert = mock.Mock()
+    pending_cert.external_id = "id123"
+
+    cert, intermediate, cert_id = subject.resolve_pending_certificate(pending_cert)
 
     assert cert == "-----BEGIN CERTIFICATE-----\nabc\n-----END CERTIFICATE-----"
     assert intermediate == "-----BEGIN CERTIFICATE-----\ndef\n-----END CERTIFICATE-----"
+    assert cert_id == "cert123"
 
 
 @patch("lemur.pending_certificates.models.PendingCertificate")

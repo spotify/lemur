@@ -467,8 +467,11 @@ def fetch_digicert_cert(self, pending_cert_id):
             return log_data
 
         # Check if a prior attempt already imported a cert for this order
-        existing = Certificate.query.filter_by(external_id=str(external_id)).first()
-        if existing:
+        existing = Certificate.query.filter_by(
+            external_id=str(external_id),
+            authority_id=pending_cert.authority_id,
+        ).first()
+        if existing and existing.private_key:
             final_cert = existing
             log_data["message"] = f"Found existing cert {final_cert.name} for external_id={external_id}"
             current_app.logger.info(log_data)
