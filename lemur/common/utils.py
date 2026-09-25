@@ -176,16 +176,6 @@ def get_key_type_from_ec_curve(curve_name):
         ec.SECP384R1().name: "ECCSECP384R1",
         ec.SECP521R1().name: "ECCSECP521R1",
         ec.SECP256K1().name: "ECCSECP256K1",
-        ec.SECT163K1().name: "ECCSECT163K1",
-        ec.SECT233K1().name: "ECCSECT233K1",
-        ec.SECT283K1().name: "ECCSECT283K1",
-        ec.SECT409K1().name: "ECCSECT409K1",
-        ec.SECT571K1().name: "ECCSECT571K1",
-        ec.SECT163R2().name: "ECCSECT163R2",
-        ec.SECT233R1().name: "ECCSECT233R1",
-        ec.SECT283R1().name: "ECCSECT283R1",
-        ec.SECT409R1().name: "ECCSECT409R1",
-        ec.SECT571R1().name: "ECCSECT571R2",
     }
 
     if curve_name in _CURVE_TYPES.keys():
@@ -198,10 +188,8 @@ def generate_private_key(key_type):
     """
     Generates a new private key based on key_type.
 
-    Valid key types: RSA2048, RSA4096', 'ECCPRIME192V1', 'ECCPRIME256V1', 'ECCSECP192R1',
-        'ECCSECP224R1', 'ECCSECP256R1', 'ECCSECP384R1', 'ECCSECP521R1', 'ECCSECP256K1',
-        'ECCSECT163K1', 'ECCSECT233K1', 'ECCSECT283K1', 'ECCSECT409K1', 'ECCSECT571K1',
-        'ECCSECT163R2', 'ECCSECT233R1', 'ECCSECT283R1', 'ECCSECT409R1', 'ECCSECT571R2'
+    Valid key types: RSA2048, RSA4096, ECCPRIME192V1, ECCPRIME256V1, ECCSECP192R1,
+        ECCSECP224R1, ECCSECP256R1, ECCSECP384R1, ECCSECP521R1, ECCSECP256K1
 
     :param key_type:
     :return:
@@ -216,16 +204,6 @@ def generate_private_key(key_type):
         "ECCSECP384R1": ec.SECP384R1(),
         "ECCSECP521R1": ec.SECP521R1(),
         "ECCSECP256K1": ec.SECP256K1(),
-        "ECCSECT163K1": ec.SECT163K1(),
-        "ECCSECT233K1": ec.SECT233K1(),
-        "ECCSECT283K1": ec.SECT283K1(),
-        "ECCSECT409K1": ec.SECT409K1(),
-        "ECCSECT571K1": ec.SECT571K1(),
-        "ECCSECT163R2": ec.SECT163R2(),
-        "ECCSECT233R1": ec.SECT233R1(),
-        "ECCSECT283R1": ec.SECT283R1(),
-        "ECCSECT409R1": ec.SECT409R1(),
-        "ECCSECT571R2": ec.SECT571R1(),
     }
 
     if key_type not in CERTIFICATE_KEY_TYPES:

@@ -14,9 +14,6 @@ SUCCESS_METRIC_STATUS = "success"
 FAILURE_METRIC_STATUS = "failure"
 
 
-# when ACME attempts to resolve a certificate try in total 3 times
-ACME_ADDITIONAL_ATTEMPTS = 2
-
 CERTIFICATE_KEY_TYPES = [
     "RSA2048",
     "RSA4096",
@@ -28,16 +25,6 @@ CERTIFICATE_KEY_TYPES = [
     "ECCSECP384R1",
     "ECCSECP521R1",
     "ECCSECP256K1",
-    "ECCSECT163K1",
-    "ECCSECT233K1",
-    "ECCSECT283K1",
-    "ECCSECT409K1",
-    "ECCSECT571K1",
-    "ECCSECT163R2",
-    "ECCSECT233R1",
-    "ECCSECT283R1",
-    "ECCSECT409R1",
-    "ECCSECT571R2",
 ]
 
 # For commonly reused regexes used by plugins

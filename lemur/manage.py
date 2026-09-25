@@ -16,7 +16,6 @@ from sqlalchemy.sql import text
 
 from lemur import create_app
 from lemur import database
-from lemur.acme_providers.cli import cli as acme_cli
 from lemur.api_keys.cli import cli as api_keys_cli
 from lemur.authorities.models import Authority  # noqa
 from lemur.certificates.cli import cli as certificate_cli
@@ -593,7 +592,6 @@ def publish_verisign_units():
 
 def main():
 
-    cli.add_command(acme_cli, "acme")
     cli.add_command(api_keys_cli, "api_keys")
     cli.add_command(certificate_cli, "certificate")
     cli.add_command(dns_provider_cli, "dns_providers")

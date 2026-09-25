@@ -25,20 +25,6 @@ from lemur.logs import service as log_service
 from lemur.certificates.service import upload
 
 
-def _validate_acme_url_in_options(options_json: str) -> None:
-    # Imported here, rather than at module scope, to avoid a circular import:
-    # lemur.plugins.lemur_acme.acme_handlers imports lemur.authorities.service.
-    from lemur.plugins.lemur_acme.plugin import validate_acme_url
-
-    try:
-        options = json.loads(options_json)
-    except (json.JSONDecodeError, TypeError):
-        return
-    for option in options:
-        if isinstance(option, dict) and option.get("name") == "acme_url":
-            validate_acme_url(option.get("value", ""))
-
-
 def update(authority_id, description, owner, active, roles, options: Optional[str] = None):
     """
     Update an authority with new values.
@@ -54,7 +40,6 @@ def update(authority_id, description, owner, active, roles, options: Optional[st
     authority.description = description
     authority.owner = owner
     if options:
-        _validate_acme_url_in_options(options)
         authority.options = options
 
     log_service.audit_log("update_authority", authority.name, "Updating authority")  # check ui what can be updated
@@ -71,7 +56,6 @@ def update_options(authority_id, options):
     """
     authority = get(authority_id)
 
-    _validate_acme_url_in_options(options)
     authority.options = options
 
     return database.update(authority)

@@ -23,7 +23,6 @@ from lemur.authorities.service import get as get_authority
 from lemur.certificates import cli as cli_certificate
 from lemur.certificates import service as certificate_service
 from lemur.common.redis import RedisHandler
-from lemur.constants import ACME_ADDITIONAL_ATTEMPTS
 from lemur.dns_providers import cli as cli_dns_providers
 from lemur.extensions import metrics
 from lemur.factory import create_app
@@ -311,7 +310,7 @@ def fetch_acme_cert(id, notify_reissue_cert_id=None):
             error_log["last_error"] = cert.get("last_error")
             error_log["cn"] = pending_cert.cn
 
-            if pending_cert.number_attempts > ACME_ADDITIONAL_ATTEMPTS:
+            if pending_cert.number_attempts > 2:
                 error_log["message"] = "Deleting pending certificate"
                 send_pending_failure_notification(
                     pending_cert, notify_owner=pending_cert.notify
