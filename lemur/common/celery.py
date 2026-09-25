@@ -445,20 +445,40 @@ def fetch_digicert_cert(self, pending_cert_id):
     if result is None:
         _retry_with_backoff("Still pending")
 
-    # Check if another task already resolved this record (idempotency guard)
-    pending_cert = pending_certificate_service.get(pending_cert_id)
-    if pending_cert.resolved or pending_cert.resolved_cert_id:
-        log_data["message"] = f"Already resolved by another task (resolved_cert_id={pending_cert.resolved_cert_id})"
-        current_app.logger.info(log_data)
-        return log_data
-
     cert_body, cert_chain, external_id = result
     try:
-        final_cert = pending_certificate_service.create_certificate(
-            pending_cert,
-            {"body": cert_body, "chain": cert_chain, "external_id": external_id},
-            pending_cert.user,
-        )
+        from lemur.certificates.models import Certificate
+        from lemur.pending_certificates.models import PendingCertificate
+        from lemur import database
+
+        # Atomically claim the pending cert row for finalization
+        pending_cert = database.session_query(PendingCertificate).with_for_update().get(pending_cert_id)
+
+        if pending_cert.resolved:
+            log_data["message"] = f"Already resolved (resolved_cert_id={pending_cert.resolved_cert_id})"
+            current_app.logger.info(log_data)
+            return log_data
+
+        if pending_cert.resolved_cert_id:
+            # Prior attempt imported but didn't finish marking resolved
+            pending_certificate_service.update(pending_cert_id, resolved=True)
+            log_data["message"] = f"Completed partial resolution (resolved_cert_id={pending_cert.resolved_cert_id})"
+            current_app.logger.info(log_data)
+            return log_data
+
+        # Check if a prior attempt already imported a cert for this order
+        existing = Certificate.query.filter_by(external_id=str(external_id)).first()
+        if existing:
+            final_cert = existing
+            log_data["message"] = f"Found existing cert {final_cert.name} for external_id={external_id}"
+            current_app.logger.info(log_data)
+        else:
+            final_cert = pending_certificate_service.create_certificate(
+                pending_cert,
+                {"body": cert_body, "chain": cert_chain, "external_id": external_id},
+                pending_cert.user,
+            )
+
         pending_certificate_service.update(pending_cert_id, resolved_cert_id=final_cert.id)
         pending_certificate_service.update(pending_cert_id, resolved=True)
     except Exception as e:
