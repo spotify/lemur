@@ -391,6 +391,10 @@ def fetch_digicert_cert(self, pending_cert_id):
     Retries with exponential backoff (30s, 60s, 120s, ... capped at 600s)
     until the order is issued, reaches a terminal state, or exceeds
     DIGICERT_PENDING_MAX_ATTEMPTS (default 100) attempts.
+
+    All failure paths — polling, transient errors, and finalization — count
+    toward the attempt budget. Finalization checks resolved_cert_id before
+    importing to avoid duplicates across retries or concurrent tasks.
     """
     from lemur.plugins.lemur_digicert.plugin import DigiCertTerminalOrderError
 
@@ -414,6 +418,13 @@ def fetch_digicert_cert(self, pending_cert_id):
         pending_certificate_service.update(pending_cert_id, resolved=True)
         return log_data
 
+    def _retry_with_backoff(reason):
+        pending_certificate_service.increment_attempt(pending_cert)
+        backoff = min(30 * (2 ** pending_cert.number_attempts), 600)
+        log_data["message"] = f"{reason}, retry #{pending_cert.number_attempts} in {backoff}s"
+        current_app.logger.info(log_data)
+        raise self.retry(countdown=backoff)
+
     cert_authority = get_authority(pending_cert.authority_id)
     issuer = plugins.get(cert_authority.plugin_name)
 
@@ -427,19 +438,19 @@ def fetch_digicert_cert(self, pending_cert_id):
         pending_certificate_service.update(pending_cert_id, resolved=True)
         return log_data
     except Exception as e:
-        pending_certificate_service.increment_attempt(pending_cert)
         pending_certificate_service.update(pending_cert_id, status=f"Transient error: {e}")
-        backoff = min(30 * (2 ** pending_cert.number_attempts), 600)
-        log_data["message"] = f"Transient error ({e}), retry #{pending_cert.number_attempts} in {backoff}s"
-        current_app.logger.warning(log_data, exc_info=True)
-        raise self.retry(countdown=backoff)
+        current_app.logger.warning(log_data | {"message": f"Transient error: {e}"}, exc_info=True)
+        _retry_with_backoff(f"Transient error ({e})")
 
     if result is None:
-        pending_certificate_service.increment_attempt(pending_cert)
-        backoff = min(30 * (2 ** pending_cert.number_attempts), 600)
-        log_data["message"] = f"Still pending, retry #{pending_cert.number_attempts} in {backoff}s"
+        _retry_with_backoff("Still pending")
+
+    # Check if another task already resolved this record (idempotency guard)
+    pending_cert = pending_certificate_service.get(pending_cert_id)
+    if pending_cert.resolved or pending_cert.resolved_cert_id:
+        log_data["message"] = f"Already resolved by another task (resolved_cert_id={pending_cert.resolved_cert_id})"
         current_app.logger.info(log_data)
-        raise self.retry(countdown=backoff)
+        return log_data
 
     cert_body, cert_chain, external_id = result
     try:
@@ -451,9 +462,9 @@ def fetch_digicert_cert(self, pending_cert_id):
         pending_certificate_service.update(pending_cert_id, resolved_cert_id=final_cert.id)
         pending_certificate_service.update(pending_cert_id, resolved=True)
     except Exception as e:
-        log_data["message"] = f"Finalization failed ({e}), retrying"
-        current_app.logger.error(log_data, exc_info=True)
-        raise self.retry(countdown=30)
+        current_app.logger.error(log_data | {"message": f"Finalization failed: {e}"}, exc_info=True)
+        pending_certificate_service.update(pending_cert_id, status=f"Finalization error: {e}")
+        _retry_with_backoff(f"Finalization failed ({e})")
 
     log_data["message"] = f"Resolved to certificate {final_cert.name} (id={final_cert.id})"
     current_app.logger.info(log_data)
@@ -466,18 +477,34 @@ def fetch_all_pending_digicert_certs():
     """Sweep for unresolved DigiCert pending certificates and dispatch resolution tasks.
 
     Catches records left behind by task-dispatch failures or missed retries.
+    Runs on the same schedule as fetch_all_pending_acme_certs (every 10 minutes).
+    Wire into CELERYBEAT_SCHEDULE in lemur.conf.py:
+
+        "fetch_all_pending_digicert_certs": {
+            "task": "lemur.common.celery.fetch_all_pending_digicert_certs",
+            "schedule": crontab(minute="*/10"),
+        }
     """
     function = f"{__name__}.{sys._getframe().f_code.co_name}"
-    log_data = {"function": function, "message": "Starting job."}
-    current_app.logger.debug(log_data)
+    task_id = None
+    if celery_app.current_task:
+        task_id = celery_app.current_task.request.id
 
+    log_data = {"function": function, "message": "Starting job.", "task_id": task_id}
+
+    if task_id and is_task_active(function, task_id, None):
+        log_data["message"] = "Skipping task: Task is already active"
+        current_app.logger.debug(log_data)
+        return
+
+    current_app.logger.debug(log_data)
     pending_certs = pending_certificate_service.get_unresolved_pending_certs()
     dispatched = 0
 
     for cert in pending_certs:
         cert_authority = get_authority(cert.authority_id)
         if cert_authority.plugin_name == "digicert-issuer":
-            if datetime.now(timezone.utc) - cert.last_updated > timedelta(minutes=5):
+            if datetime.now(timezone.utc) - cert.last_updated > timedelta(minutes=10):
                 current_app.logger.debug(
                     {"function": function, "message": f"Dispatching {cert.name}", "cert_id": cert.id}
                 )
