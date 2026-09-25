@@ -293,6 +293,56 @@ def test_create_cis_authority(mock_current_app, authority):
 
 
 @patch("lemur.plugins.lemur_digicert.plugin.current_app")
+def test_get_certificate_id_issued(mock_current_app):
+    mock_current_app.config.get = Mock(side_effect=lambda k, d=None: {"DIGICERT_ORDER_TIMEOUT": 30, "DIGICERT_ORDER_POLL_INTERVAL": 0.1}.get(k, d))
+    session = mock.Mock()
+    session.get.return_value.status_code = 200
+    session.get.return_value.json.return_value = {"status": "issued", "certificate": {"id": 12345}}
+
+    result = plugin.get_certificate_id(session, "https://digicert.example.com", "order-1")
+    assert result == 12345
+    assert session.get.call_count == 1
+
+
+@patch("lemur.plugins.lemur_digicert.plugin.current_app")
+def test_get_certificate_id_pending_then_issued(mock_current_app):
+    mock_current_app.config.get = Mock(side_effect=lambda k, d=None: {"DIGICERT_ORDER_TIMEOUT": 30, "DIGICERT_ORDER_POLL_INTERVAL": 0.1}.get(k, d))
+    session = mock.Mock()
+    pending = mock.Mock(status_code=200)
+    pending.json.return_value = {"status": "pending"}
+    issued = mock.Mock(status_code=200)
+    issued.json.return_value = {"status": "issued", "certificate": {"id": 99}}
+    session.get.side_effect = [pending, issued]
+
+    result = plugin.get_certificate_id(session, "https://digicert.example.com", "order-2")
+    assert result == 99
+    assert session.get.call_count == 2
+
+
+@patch("lemur.plugins.lemur_digicert.plugin.current_app")
+def test_get_certificate_id_terminal_state(mock_current_app):
+    mock_current_app.config.get = Mock(side_effect=lambda k, d=None: {"DIGICERT_ORDER_TIMEOUT": 30, "DIGICERT_ORDER_POLL_INTERVAL": 0.1}.get(k, d))
+    session = mock.Mock()
+    session.get.return_value.status_code = 200
+    session.get.return_value.json.return_value = {"status": "rejected"}
+
+    with pytest.raises(Exception, match="terminal state: rejected"):
+        plugin.get_certificate_id(session, "https://digicert.example.com", "order-3")
+    assert session.get.call_count == 1
+
+
+@patch("lemur.plugins.lemur_digicert.plugin.current_app")
+def test_get_certificate_id_timeout(mock_current_app):
+    mock_current_app.config.get = Mock(side_effect=lambda k, d=None: {"DIGICERT_ORDER_TIMEOUT": 0.2, "DIGICERT_ORDER_POLL_INTERVAL": 0.1}.get(k, d))
+    session = mock.Mock()
+    session.get.return_value.status_code = 200
+    session.get.return_value.json.return_value = {"status": "pending"}
+
+    with pytest.raises(Exception, match="still in 'pending' state"):
+        plugin.get_certificate_id(session, "https://digicert.example.com", "order-4")
+
+
+@patch("lemur.plugins.lemur_digicert.plugin.current_app")
 def test_handle_cis_response_no_key_logging(mock_current_app):
     from lemur.plugins.lemur_digicert.plugin import handle_cis_response
     mock_response = mock.Mock()

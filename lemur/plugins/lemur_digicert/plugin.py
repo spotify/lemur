@@ -261,15 +261,43 @@ def handle_cis_response(session, response):
         return response.json()
 
 
-@retry(stop_max_attempt_number=10, wait_fixed=1000)
 def get_certificate_id(session, base_url, order_id):
-    """Retrieve certificate order id from Digicert API."""
-    order_url = f"{base_url}/services/v2/order/certificate/{order_id}"
-    response_data = handle_response(session.get(order_url))
-    if response_data["status"] != "issued":
-        raise Exception("Order not in issued state.")
+    """Retrieve certificate order id from Digicert API.
 
-    return response_data["certificate"]["id"]
+    Polls the order status until it reaches 'issued', with configurable timeout
+    via DIGICERT_ORDER_TIMEOUT (default 300 seconds) and poll interval via
+    DIGICERT_ORDER_POLL_INTERVAL (default 5 seconds).
+    """
+    import time
+
+    timeout = current_app.config.get("DIGICERT_ORDER_TIMEOUT", 300)
+    interval = current_app.config.get("DIGICERT_ORDER_POLL_INTERVAL", 5)
+    order_url = f"{base_url}/services/v2/order/certificate/{order_id}"
+    deadline = time.monotonic() + timeout
+
+    while True:
+        response_data = handle_response(session.get(order_url))
+        status = response_data.get("status")
+
+        if status == "issued":
+            return response_data["certificate"]["id"]
+
+        if status in ("rejected", "revoked", "canceled"):
+            raise Exception(f"DigiCert order {order_id} reached terminal state: {status}")
+
+        remaining = int(deadline - time.monotonic())
+        if remaining <= 0:
+            raise Exception(
+                f"DigiCert order {order_id} still in '{status}' state "
+                f"after {timeout}s timeout. Order may complete later — "
+                f"check CertCentral and retry without creating a new order."
+            )
+
+        current_app.logger.info(
+            f"DigiCert order {order_id}: status={status}, "
+            f"retrying in {interval}s ({remaining}s remaining)"
+        )
+        time.sleep(interval)
 
 
 @retry(stop_max_attempt_number=10, wait_fixed=1000)
