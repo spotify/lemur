@@ -34,6 +34,11 @@ from lemur.plugins import lemur_digicert as digicert
 from lemur.plugins.bases import IssuerPlugin, SourcePlugin
 
 
+class DigiCertTerminalOrderError(Exception):
+    """Raised when a DigiCert order reaches a state it cannot recover from."""
+    pass
+
+
 def log_status_code(r, *args, **kwargs):
     """
     Is a request hook that logs all status codes to the digicert api.
@@ -283,7 +288,7 @@ def get_certificate_id(session, base_url, order_id):
             return response_data["certificate"]["id"]
 
         if status in ("rejected", "revoked", "canceled"):
-            raise Exception(f"DigiCert order {order_id} reached terminal state: {status}")
+            raise DigiCertTerminalOrderError(f"DigiCert order {order_id} reached terminal state: {status}")
 
         remaining = int(deadline - time.monotonic())
         if remaining <= 0:
@@ -462,6 +467,10 @@ class DigiCertIssuerPlugin(IssuerPlugin):
     def create_certificate(self, csr, issuer_options):
         """Create a DigiCert certificate.
 
+        Submits the order and returns immediately with a pending result.
+        The private key and order ID are persisted as a PendingCertificate
+        by the caller, and a background task resolves it when DigiCert issues.
+
         :param csr:
         :param issuer_options:
         :return: :raise Exception:
@@ -481,16 +490,11 @@ class DigiCertIssuerPlugin(IssuerPlugin):
 
         order_id = response.json()["id"]
 
-        try:
-            certificate_id = get_certificate_id(self.session, base_url, order_id)
-        except Exception:
-            current_app.logger.info(
-                f"DigiCert order {order_id} not yet issued, "
-                f"creating pending certificate for background resolution"
-            )
-            return None, None, order_id
-
-        return self._download_certificate(base_url, certificate_id)
+        current_app.logger.info(
+            f"DigiCert order {order_id} accepted, "
+            f"deferring to background task for resolution"
+        )
+        return None, None, order_id
 
     def _download_certificate(self, base_url, certificate_id):
         """Download an issued certificate from DigiCert."""
@@ -528,7 +532,7 @@ class DigiCertIssuerPlugin(IssuerPlugin):
             return self._download_certificate(base_url, certificate_id)
 
         if status in ("rejected", "revoked", "canceled"):
-            raise Exception(f"DigiCert order {order_id} reached terminal state: {status}")
+            raise DigiCertTerminalOrderError(f"DigiCert order {order_id} reached terminal state: {status}")
 
         current_app.logger.info(f"DigiCert order {order_id}: still {status}")
         return None

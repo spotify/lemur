@@ -392,6 +392,8 @@ def fetch_digicert_cert(self, pending_cert_id):
     until the order is issued, reaches a terminal state, or exceeds
     DIGICERT_PENDING_MAX_ATTEMPTS (default 100) attempts.
     """
+    from lemur.plugins.lemur_digicert.plugin import DigiCertTerminalOrderError
+
     function = f"{__name__}.{sys._getframe().f_code.co_name}"
     log_data = {
         "function": function,
@@ -417,13 +419,20 @@ def fetch_digicert_cert(self, pending_cert_id):
 
     try:
         result = issuer.resolve_pending_certificate(pending_cert)
-    except Exception as e:
+    except DigiCertTerminalOrderError as e:
         log_data["message"] = f"Terminal failure: {e}"
         current_app.logger.error(log_data, exc_info=True)
         pending_certificate_service.update(pending_cert_id, status=str(e))
         send_pending_failure_notification(pending_cert, notify_owner=pending_cert.notify)
         pending_certificate_service.update(pending_cert_id, resolved=True)
         return log_data
+    except Exception as e:
+        pending_certificate_service.increment_attempt(pending_cert)
+        pending_certificate_service.update(pending_cert_id, status=f"Transient error: {e}")
+        backoff = min(30 * (2 ** pending_cert.number_attempts), 600)
+        log_data["message"] = f"Transient error ({e}), retry #{pending_cert.number_attempts} in {backoff}s"
+        current_app.logger.warning(log_data, exc_info=True)
+        raise self.retry(countdown=backoff)
 
     if result is None:
         pending_certificate_service.increment_attempt(pending_cert)
@@ -433,17 +442,51 @@ def fetch_digicert_cert(self, pending_cert_id):
         raise self.retry(countdown=backoff)
 
     cert_body, cert_chain, external_id = result
-    final_cert = pending_certificate_service.create_certificate(
-        pending_cert,
-        {"body": cert_body, "chain": cert_chain, "external_id": external_id},
-        pending_cert.user,
-    )
-    pending_certificate_service.update(pending_cert_id, resolved_cert_id=final_cert.id)
-    pending_certificate_service.update(pending_cert_id, resolved=True)
+    try:
+        final_cert = pending_certificate_service.create_certificate(
+            pending_cert,
+            {"body": cert_body, "chain": cert_chain, "external_id": external_id},
+            pending_cert.user,
+        )
+        pending_certificate_service.update(pending_cert_id, resolved_cert_id=final_cert.id)
+        pending_certificate_service.update(pending_cert_id, resolved=True)
+    except Exception as e:
+        log_data["message"] = f"Finalization failed ({e}), retrying"
+        current_app.logger.error(log_data, exc_info=True)
+        raise self.retry(countdown=30)
 
     log_data["message"] = f"Resolved to certificate {final_cert.name} (id={final_cert.id})"
     current_app.logger.info(log_data)
     metrics.send(f"{function}.resolved", "counter", 1)
+    return log_data
+
+
+@celery_app.task()
+def fetch_all_pending_digicert_certs():
+    """Sweep for unresolved DigiCert pending certificates and dispatch resolution tasks.
+
+    Catches records left behind by task-dispatch failures or missed retries.
+    """
+    function = f"{__name__}.{sys._getframe().f_code.co_name}"
+    log_data = {"function": function, "message": "Starting job."}
+    current_app.logger.debug(log_data)
+
+    pending_certs = pending_certificate_service.get_unresolved_pending_certs()
+    dispatched = 0
+
+    for cert in pending_certs:
+        cert_authority = get_authority(cert.authority_id)
+        if cert_authority.plugin_name == "digicert-issuer":
+            if datetime.now(timezone.utc) - cert.last_updated > timedelta(minutes=5):
+                current_app.logger.debug(
+                    {"function": function, "message": f"Dispatching {cert.name}", "cert_id": cert.id}
+                )
+                fetch_digicert_cert.delay(cert.id)
+                dispatched += 1
+
+    log_data["message"] = f"Complete, dispatched {dispatched}"
+    current_app.logger.debug(log_data)
+    metrics.send(f"{function}.dispatched", "gauge", dispatched)
     return log_data
 
 

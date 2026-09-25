@@ -321,12 +321,13 @@ def test_get_certificate_id_pending_then_issued(mock_current_app):
 
 @patch("lemur.plugins.lemur_digicert.plugin.current_app")
 def test_get_certificate_id_terminal_state(mock_current_app):
+    from lemur.plugins.lemur_digicert.plugin import DigiCertTerminalOrderError
     mock_current_app.config.get = Mock(side_effect=lambda k, d=None: {"DIGICERT_ORDER_TIMEOUT": 30, "DIGICERT_ORDER_POLL_INTERVAL": 0.1}.get(k, d))
     session = mock.Mock()
     session.get.return_value.status_code = 200
     session.get.return_value.json.return_value = {"status": "rejected"}
 
-    with pytest.raises(Exception, match="terminal state: rejected"):
+    with pytest.raises(DigiCertTerminalOrderError, match="terminal state: rejected"):
         plugin.get_certificate_id(session, "https://digicert.example.com", "order-3")
     assert session.get.call_count == 1
 
@@ -346,32 +347,23 @@ def test_get_certificate_id_timeout(mock_current_app):
 def test_create_certificate_returns_pending(mock_current_app):
     from lemur.plugins.lemur_digicert.plugin import DigiCertIssuerPlugin
     mock_current_app.config.get = Mock(side_effect=lambda k, d=None: {
-        "DIGICERT_ORDER_TIMEOUT": 0.2,
-        "DIGICERT_ORDER_POLL_INTERVAL": 0.1,
         "DIGICERT_URL": "https://digicert.example.com",
         "DIGICERT_ORDER_TYPE": "ssl_basic",
         "DIGICERT_API_KEY": "test-key",
-        "DIGICERT_ORG_ID": 111111,
-        "DIGICERT_ROOT": "root",
     }.get(k, d))
-    mock_current_app.config.__getitem__ = lambda self, k: {
-        "DIGICERT_API_KEY": "test-key",
-    }[k]
 
     with patch.object(DigiCertIssuerPlugin, "__init__", lambda self, *a, **kw: None):
         issuer = DigiCertIssuerPlugin()
         issuer.session = mock.Mock()
-        # POST order returns success
         issuer.session.post.return_value = mock.Mock(status_code=201)
         issuer.session.post.return_value.json.return_value = {"id": "order-pending"}
-        # GET order always returns pending (triggers timeout)
-        issuer.session.get.return_value = mock.Mock(status_code=200)
-        issuer.session.get.return_value.json.return_value = {"status": "pending"}
 
         cert_body, cert_chain, external_id = issuer.create_certificate("fake-csr", {"common_name": "test.example.com"})
         assert cert_body is None
         assert cert_chain is None
         assert external_id == "order-pending"
+        # No GET calls — order is always deferred to background task
+        assert issuer.session.get.call_count == 0
 
 
 @patch("lemur.plugins.lemur_digicert.plugin.current_app")
