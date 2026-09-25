@@ -384,6 +384,162 @@ def fetch_all_pending_acme_certs():
     return log_data
 
 
+@celery_app.task(bind=True, max_retries=None)
+def fetch_digicert_cert(self, pending_cert_id):
+    """Attempt to resolve a pending DigiCert certificate.
+
+    Retries with exponential backoff (30s, 60s, 120s, ... capped at 600s)
+    until the order is issued, reaches a terminal state, or exceeds
+    DIGICERT_PENDING_MAX_ATTEMPTS (default 100) attempts.
+
+    All failure paths — polling, transient errors, and finalization — count
+    toward the attempt budget. Finalization checks resolved_cert_id before
+    importing to avoid duplicates across retries or concurrent tasks.
+    """
+    from lemur.plugins.lemur_digicert.plugin import DigiCertTerminalOrderError
+
+    function = f"{__name__}.{sys._getframe().f_code.co_name}"
+    log_data = {
+        "function": function,
+        "pending_cert_id": pending_cert_id,
+    }
+
+    pending_cert = pending_certificate_service.get(pending_cert_id)
+    if not pending_cert or pending_cert.resolved:
+        log_data["message"] = "Pending certificate already resolved or missing"
+        current_app.logger.info(log_data)
+        return log_data
+
+    max_attempts = current_app.config.get("DIGICERT_PENDING_MAX_ATTEMPTS", 100)
+    if pending_cert.number_attempts >= max_attempts:
+        log_data["message"] = f"Giving up after {pending_cert.number_attempts} attempts"
+        current_app.logger.error(log_data)
+        send_pending_failure_notification(pending_cert, notify_owner=pending_cert.notify)
+        pending_certificate_service.update(pending_cert_id, resolved=True)
+        return log_data
+
+    def _retry_with_backoff(reason):
+        pending_certificate_service.increment_attempt(pending_cert)
+        backoff = min(30 * (2 ** pending_cert.number_attempts), 600)
+        log_data["message"] = f"{reason}, retry #{pending_cert.number_attempts} in {backoff}s"
+        current_app.logger.info(log_data)
+        raise self.retry(countdown=backoff)
+
+    cert_authority = get_authority(pending_cert.authority_id)
+    issuer = plugins.get(cert_authority.plugin_name)
+
+    try:
+        result = issuer.resolve_pending_certificate(pending_cert)
+    except DigiCertTerminalOrderError as e:
+        log_data["message"] = f"Terminal failure: {e}"
+        current_app.logger.error(log_data, exc_info=True)
+        pending_certificate_service.update(pending_cert_id, status=str(e))
+        send_pending_failure_notification(pending_cert, notify_owner=pending_cert.notify)
+        pending_certificate_service.update(pending_cert_id, resolved=True)
+        return log_data
+    except Exception as e:
+        pending_certificate_service.update(pending_cert_id, status=f"Transient error: {e}")
+        current_app.logger.warning(log_data | {"message": f"Transient error: {e}"}, exc_info=True)
+        _retry_with_backoff(f"Transient error ({e})")
+
+    if result is None:
+        _retry_with_backoff("Still pending")
+
+    cert_body, cert_chain, external_id = result
+    try:
+        from lemur.certificates.models import Certificate
+        from lemur.pending_certificates.models import PendingCertificate
+        from lemur import database
+
+        # Atomically claim the pending cert row for finalization
+        pending_cert = database.session_query(PendingCertificate).with_for_update().get(pending_cert_id)
+
+        if pending_cert.resolved:
+            log_data["message"] = f"Already resolved (resolved_cert_id={pending_cert.resolved_cert_id})"
+            current_app.logger.info(log_data)
+            return log_data
+
+        if pending_cert.resolved_cert_id:
+            # Prior attempt imported but didn't finish marking resolved
+            pending_certificate_service.update(pending_cert_id, resolved=True)
+            log_data["message"] = f"Completed partial resolution (resolved_cert_id={pending_cert.resolved_cert_id})"
+            current_app.logger.info(log_data)
+            return log_data
+
+        # Check if a prior attempt already imported a cert for this order
+        existing = Certificate.query.filter_by(
+            external_id=str(external_id),
+            authority_id=pending_cert.authority_id,
+        ).first()
+        if existing and existing.private_key:
+            final_cert = existing
+            log_data["message"] = f"Found existing cert {final_cert.name} for external_id={external_id}"
+            current_app.logger.info(log_data)
+        else:
+            final_cert = pending_certificate_service.create_certificate(
+                pending_cert,
+                {"body": cert_body, "chain": cert_chain, "external_id": external_id},
+                pending_cert.user,
+            )
+
+        pending_certificate_service.update(pending_cert_id, resolved_cert_id=final_cert.id)
+        pending_certificate_service.update(pending_cert_id, resolved=True)
+    except Exception as e:
+        current_app.logger.error(log_data | {"message": f"Finalization failed: {e}"}, exc_info=True)
+        pending_certificate_service.update(pending_cert_id, status=f"Finalization error: {e}")
+        _retry_with_backoff(f"Finalization failed ({e})")
+
+    log_data["message"] = f"Resolved to certificate {final_cert.name} (id={final_cert.id})"
+    current_app.logger.info(log_data)
+    metrics.send(f"{function}.resolved", "counter", 1)
+    return log_data
+
+
+@celery_app.task()
+def fetch_all_pending_digicert_certs():
+    """Sweep for unresolved DigiCert pending certificates and dispatch resolution tasks.
+
+    Catches records left behind by task-dispatch failures or missed retries.
+    Runs on the same schedule as fetch_all_pending_acme_certs (every 10 minutes).
+    Wire into CELERYBEAT_SCHEDULE in lemur.conf.py:
+
+        "fetch_all_pending_digicert_certs": {
+            "task": "lemur.common.celery.fetch_all_pending_digicert_certs",
+            "schedule": crontab(minute="*/10"),
+        }
+    """
+    function = f"{__name__}.{sys._getframe().f_code.co_name}"
+    task_id = None
+    if celery_app.current_task:
+        task_id = celery_app.current_task.request.id
+
+    log_data = {"function": function, "message": "Starting job.", "task_id": task_id}
+
+    if task_id and is_task_active(function, task_id, None):
+        log_data["message"] = "Skipping task: Task is already active"
+        current_app.logger.debug(log_data)
+        return
+
+    current_app.logger.debug(log_data)
+    pending_certs = pending_certificate_service.get_unresolved_pending_certs()
+    dispatched = 0
+
+    for cert in pending_certs:
+        cert_authority = get_authority(cert.authority_id)
+        if cert_authority.plugin_name == "digicert-issuer":
+            if datetime.now(timezone.utc) - cert.last_updated > timedelta(minutes=10):
+                current_app.logger.debug(
+                    {"function": function, "message": f"Dispatching {cert.name}", "cert_id": cert.id}
+                )
+                fetch_digicert_cert.delay(cert.id)
+                dispatched += 1
+
+    log_data["message"] = f"Complete, dispatched {dispatched}"
+    current_app.logger.debug(log_data)
+    metrics.send(f"{function}.dispatched", "gauge", dispatched)
+    return log_data
+
+
 @celery_app.task()
 def remove_old_acme_certs():
     """Prune old pending acme certificates from the database"""
