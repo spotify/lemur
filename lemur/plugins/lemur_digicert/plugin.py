@@ -481,9 +481,19 @@ class DigiCertIssuerPlugin(IssuerPlugin):
 
         order_id = response.json()["id"]
 
-        certificate_id = get_certificate_id(self.session, base_url, order_id)
+        try:
+            certificate_id = get_certificate_id(self.session, base_url, order_id)
+        except Exception:
+            current_app.logger.info(
+                f"DigiCert order {order_id} not yet issued, "
+                f"creating pending certificate for background resolution"
+            )
+            return None, None, order_id
 
-        # retrieve certificate
+        return self._download_certificate(base_url, certificate_id)
+
+    def _download_certificate(self, base_url, certificate_id):
+        """Download an issued certificate from DigiCert."""
         certificate_url = "{}/services/v2/certificate/{}/download/format/pem_all".format(
             base_url, certificate_id
         )
@@ -495,6 +505,33 @@ class DigiCertIssuerPlugin(IssuerPlugin):
             "\n".join(str(intermediate).splitlines()),
             certificate_id,
         )
+
+    def resolve_pending_certificate(self, pending_cert):
+        """Attempt to resolve a pending DigiCert certificate.
+
+        Called by the background task to check if a previously submitted order
+        is now issued. Returns the same tuple as create_certificate on success,
+        or None if still pending.
+        """
+        base_url = current_app.config.get("DIGICERT_URL")
+        order_id = pending_cert.external_id
+
+        order_url = f"{base_url}/services/v2/order/certificate/{order_id}"
+        response_data = handle_response(self.session.get(order_url))
+        status = response_data.get("status")
+
+        if status == "issued":
+            certificate_id = response_data["certificate"]["id"]
+            current_app.logger.info(
+                f"DigiCert order {order_id} is now issued (certificate_id={certificate_id})"
+            )
+            return self._download_certificate(base_url, certificate_id)
+
+        if status in ("rejected", "revoked", "canceled"):
+            raise Exception(f"DigiCert order {order_id} reached terminal state: {status}")
+
+        current_app.logger.info(f"DigiCert order {order_id}: still {status}")
+        return None
 
     def revoke_certificate(self, certificate, reason):
         """Revoke a Digicert certificate."""

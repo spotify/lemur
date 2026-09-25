@@ -343,6 +343,88 @@ def test_get_certificate_id_timeout(mock_current_app):
 
 
 @patch("lemur.plugins.lemur_digicert.plugin.current_app")
+def test_create_certificate_returns_pending(mock_current_app):
+    from lemur.plugins.lemur_digicert.plugin import DigiCertIssuerPlugin
+    mock_current_app.config.get = Mock(side_effect=lambda k, d=None: {
+        "DIGICERT_ORDER_TIMEOUT": 0.2,
+        "DIGICERT_ORDER_POLL_INTERVAL": 0.1,
+        "DIGICERT_URL": "https://digicert.example.com",
+        "DIGICERT_ORDER_TYPE": "ssl_basic",
+        "DIGICERT_API_KEY": "test-key",
+        "DIGICERT_ORG_ID": 111111,
+        "DIGICERT_ROOT": "root",
+    }.get(k, d))
+    mock_current_app.config.__getitem__ = lambda self, k: {
+        "DIGICERT_API_KEY": "test-key",
+    }[k]
+
+    with patch.object(DigiCertIssuerPlugin, "__init__", lambda self, *a, **kw: None):
+        issuer = DigiCertIssuerPlugin()
+        issuer.session = mock.Mock()
+        # POST order returns success
+        issuer.session.post.return_value = mock.Mock(status_code=201)
+        issuer.session.post.return_value.json.return_value = {"id": "order-pending"}
+        # GET order always returns pending (triggers timeout)
+        issuer.session.get.return_value = mock.Mock(status_code=200)
+        issuer.session.get.return_value.json.return_value = {"status": "pending"}
+
+        cert_body, cert_chain, external_id = issuer.create_certificate("fake-csr", {"common_name": "test.example.com"})
+        assert cert_body is None
+        assert cert_chain is None
+        assert external_id == "order-pending"
+
+
+@patch("lemur.plugins.lemur_digicert.plugin.current_app")
+def test_resolve_pending_certificate_issued(mock_current_app):
+    from lemur.plugins.lemur_digicert.plugin import DigiCertIssuerPlugin
+    mock_current_app.config.get = Mock(side_effect=lambda k, d=None: {
+        "DIGICERT_URL": "https://digicert.example.com",
+        "DIGICERT_API_KEY": "test-key",
+    }.get(k, d))
+    mock_current_app.config.__getitem__ = lambda self, k: {"DIGICERT_API_KEY": "test-key"}[k]
+
+    with patch.object(DigiCertIssuerPlugin, "__init__", lambda self, *a, **kw: None):
+        issuer = DigiCertIssuerPlugin()
+        issuer.session = mock.Mock()
+        # Order is now issued
+        issuer.session.get.return_value = mock.Mock(status_code=200)
+        issuer.session.get.return_value.json.return_value = {"status": "issued", "certificate": {"id": 555}}
+        # Download returns PEM
+        download_response = mock.Mock()
+        download_response.content = b"-----BEGIN CERTIFICATE-----\nMIIBkTCB+wIJAP...\n-----END CERTIFICATE-----\n-----BEGIN CERTIFICATE-----\nMIIBkTCB+wIJAQ...\n-----END CERTIFICATE-----\n-----BEGIN CERTIFICATE-----\nMIIBkTCB+wIJAR...\n-----END CERTIFICATE-----\n"
+        issuer.session.get.side_effect = [issuer.session.get.return_value, download_response]
+
+        pending_cert = mock.Mock()
+        pending_cert.external_id = "order-555"
+
+        result = issuer.resolve_pending_certificate(pending_cert)
+        assert result is not None
+        cert_body, cert_chain, cert_id = result
+        assert cert_id == 555
+
+
+@patch("lemur.plugins.lemur_digicert.plugin.current_app")
+def test_resolve_pending_certificate_still_pending(mock_current_app):
+    from lemur.plugins.lemur_digicert.plugin import DigiCertIssuerPlugin
+    mock_current_app.config.get = Mock(side_effect=lambda k, d=None: {
+        "DIGICERT_URL": "https://digicert.example.com",
+        "DIGICERT_API_KEY": "test-key",
+    }.get(k, d))
+
+    with patch.object(DigiCertIssuerPlugin, "__init__", lambda self, *a, **kw: None):
+        issuer = DigiCertIssuerPlugin()
+        issuer.session = mock.Mock()
+        issuer.session.get.return_value = mock.Mock(status_code=200)
+        issuer.session.get.return_value.json.return_value = {"status": "pending"}
+
+        pending_cert = mock.Mock()
+        pending_cert.external_id = "order-still-pending"
+
+        result = issuer.resolve_pending_certificate(pending_cert)
+        assert result is None
+
+
+@patch("lemur.plugins.lemur_digicert.plugin.current_app")
 def test_handle_cis_response_no_key_logging(mock_current_app):
     from lemur.plugins.lemur_digicert.plugin import handle_cis_response
     mock_response = mock.Mock()
