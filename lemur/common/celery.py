@@ -478,7 +478,7 @@ def fetch_digicert_cert(self, pending_cert_id):
         else:
             final_cert = pending_certificate_service.create_certificate(
                 pending_cert,
-                {"body": cert_body, "chain": cert_chain, "external_id": external_id},
+                {"body": cert_body, "chain": cert_chain, "external_id": str(external_id)},
                 pending_cert.user,
             )
 
