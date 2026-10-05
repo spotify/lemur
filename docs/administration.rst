@@ -1928,6 +1928,21 @@ The following configuration properties are required to use the Digicert issuer p
             This is whether or not to issue a private certificate. (Default: False)
 
 
+.. data:: DIGICERT_ALTERNATE_CHAINS
+    :noindex:
+
+            A string->string mapping from authority name to alternate/cross-signed chain PEM. When configured, the specified chain will be appended to the intermediate of certificates issued by that authority. Works the same way as ``DIGICERT_CIS_ALTERNATE_CHAINS``. (Default: {})
+
+            Example::
+
+                DIGICERT_ALTERNATE_CHAINS = {
+                    "digicert-crosssigned": """-----BEGIN CERTIFICATE-----
+                MIIEgjCCA2qgAwIBAgIQBEbB7LuEYrWpF3L5qhjmezANBgkqhkiG9w0BAQsFADBh
+                ...
+                -----END CERTIFICATE-----"""
+                }
+
+
 
 Digicert Source
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

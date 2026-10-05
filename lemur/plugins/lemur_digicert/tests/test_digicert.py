@@ -462,3 +462,70 @@ def test_handle_cis_response_no_key_logging(mock_current_app):
     # Asserting the exception and headers
     assert 'wrong header' in str(context)
     assert 'X-DC-DEVKEY' not in str(context)
+
+
+_PEM_ALL = b"""-----BEGIN CERTIFICATE-----
+abc
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+def
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+ghi
+-----END CERTIFICATE-----
+"""
+
+_CROSS_PEM = "-----BEGIN CERTIFICATE-----\ncross\n-----END CERTIFICATE-----"
+
+
+def _alternate_chains_config(k, d=None):
+    return {
+        "DIGICERT_URL": "https://digicert.example.com",
+        "DIGICERT_ALTERNATE_CHAINS": {"digicert-crosssigned": _CROSS_PEM},
+    }.get(k, d)
+
+
+@pytest.mark.parametrize(
+    "authority_name,expected_chain",
+    [
+        ("digicert-crosssigned", "-----BEGIN CERTIFICATE-----\ndef\n-----END CERTIFICATE-----\n" + _CROSS_PEM),
+        ("digicert", "-----BEGIN CERTIFICATE-----\ndef\n-----END CERTIFICATE-----"),
+    ],
+)
+@patch("lemur.plugins.lemur_digicert.plugin.current_app")
+def test_resolve_pending_certificate_alternate_chain(mock_current_app, authority_name, expected_chain):
+    from lemur.plugins.lemur_digicert.plugin import DigiCertIssuerPlugin
+    mock_current_app.config.get = Mock(side_effect=_alternate_chains_config)
+
+    with patch.object(DigiCertIssuerPlugin, "__init__", lambda self, *a, **kw: None):
+        issuer = DigiCertIssuerPlugin()
+        issuer.session = mock.Mock()
+        order_response = mock.Mock(status_code=200)
+        order_response.json.return_value = {"status": "issued", "certificate": {"id": 555}}
+        issuer.session.get.side_effect = [order_response, mock.Mock(content=_PEM_ALL)]
+
+        pending_cert = mock.Mock()
+        pending_cert.external_id = "order-555"
+        pending_cert.authority.name = authority_name
+
+        _, cert_chain, _ = issuer.resolve_pending_certificate(pending_cert)
+        assert cert_chain == expected_chain
+
+
+@patch("lemur.plugins.lemur_digicert.plugin.get_certificate_id", return_value=555)
+@patch("lemur.plugins.lemur_digicert.plugin.current_app")
+def test_get_ordered_certificate_alternate_chain(mock_current_app, mock_get_certificate_id):
+    from lemur.plugins.lemur_digicert.plugin import DigiCertIssuerPlugin
+    mock_current_app.config.get = Mock(side_effect=_alternate_chains_config)
+
+    with patch.object(DigiCertIssuerPlugin, "__init__", lambda self, *a, **kw: None):
+        issuer = DigiCertIssuerPlugin()
+        issuer.session = mock.Mock()
+        issuer.session.get.return_value = mock.Mock(content=_PEM_ALL)
+
+        pending_cert = mock.Mock()
+        pending_cert.external_id = "order-555"
+        pending_cert.authority.name = "digicert-crosssigned"
+
+        cert = issuer.get_ordered_certificate(pending_cert)
+        assert cert["chain"] == "-----BEGIN CERTIFICATE-----\ndef\n-----END CERTIFICATE-----\n" + _CROSS_PEM
