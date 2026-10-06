@@ -266,6 +266,16 @@ def handle_cis_response(session, response):
         return response.json()
 
 
+def append_alternate_chain(chain, authority, config_key):
+    """Append a configured cross-signed certificate to the chain for the given authority."""
+    authority_name = authority.name if authority else None
+    if authority_name:
+        cross_signed_root = current_app.config.get(config_key, {}).get(authority_name)
+        if cross_signed_root:
+            chain = str(chain).rstrip("\n") + "\n" + cross_signed_root
+    return chain
+
+
 def get_certificate_id(session, base_url, order_id):
     """Retrieve certificate order id from Digicert API.
 
@@ -496,7 +506,7 @@ class DigiCertIssuerPlugin(IssuerPlugin):
         )
         return None, None, order_id
 
-    def _download_certificate(self, base_url, certificate_id):
+    def _download_certificate(self, base_url, certificate_id, authority=None):
         """Download an issued certificate from DigiCert."""
         certificate_url = "{}/services/v2/certificate/{}/download/format/pem_all".format(
             base_url, certificate_id
@@ -504,6 +514,7 @@ class DigiCertIssuerPlugin(IssuerPlugin):
         end_entity, intermediate, root = pem.parse(
             self.session.get(certificate_url).content
         )
+        intermediate = append_alternate_chain(intermediate, authority, "DIGICERT_ALTERNATE_CHAINS")
         return (
             "\n".join(str(end_entity).splitlines()),
             "\n".join(str(intermediate).splitlines()),
@@ -529,7 +540,7 @@ class DigiCertIssuerPlugin(IssuerPlugin):
             current_app.logger.info(
                 f"DigiCert order {order_id} is now issued (certificate_id={certificate_id})"
             )
-            return self._download_certificate(base_url, certificate_id)
+            return self._download_certificate(base_url, certificate_id, pending_cert.authority)
 
         if status in ("rejected", "revoked", "canceled"):
             raise DigiCertTerminalOrderError(f"DigiCert order {order_id} reached terminal state: {status}")
@@ -568,6 +579,7 @@ class DigiCertIssuerPlugin(IssuerPlugin):
         end_entity, intermediate, root = pem.parse(
             self.session.get(certificate_url).content
         )
+        intermediate = append_alternate_chain(intermediate, pending_cert.authority, "DIGICERT_ALTERNATE_CHAINS")
         cert = {
             "body": "\n".join(str(end_entity).splitlines()),
             "chain": "\n".join(str(intermediate).splitlines()),
@@ -755,12 +767,9 @@ class DigiCertCISIssuerPlugin(IssuerPlugin):
         intermediate = certificate_chain_pem[1]
 
         # Append cross-signed root if configured for this authority
-        authority_name = issuer_options.get('authority').name if issuer_options.get('authority') else None
-        if authority_name:
-            cross_signed_root = current_app.config.get("DIGICERT_CIS_ALTERNATE_CHAINS", {}).get(authority_name)
-            if cross_signed_root:
-                # Append the cross-signed root to the intermediate chain
-                intermediate = str(intermediate) + "\n" + cross_signed_root
+        intermediate = append_alternate_chain(
+            intermediate, issuer_options.get('authority'), "DIGICERT_CIS_ALTERNATE_CHAINS"
+        )
 
         return (
             "\n".join(str(end_entity).splitlines()),
